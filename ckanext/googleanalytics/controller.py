@@ -29,7 +29,7 @@ class GAController(BaseController):
 class GAApiController(ApiController):
     # intercept API calls to record via google analytics
     def _post_analytics(
-            self, user, request_obj_type, request_function, request_id):
+            self, user, request_obj_type, request_function, request_id, dataset=None, method=None):
         if config.get('googleanalytics.id'):
             data_dict = {
                 "v": 1,
@@ -44,6 +44,10 @@ class GAApiController(ApiController):
                 "ea": request_obj_type+request_function,
                 "el": request_id,
             }
+            if dataset:
+                data_dict.update({"cd1": dataset})
+            if method:
+                data_dict.update({"cd2": method})
             plugin.GoogleAnalyticsPlugin.analytics_queue.put(data_dict)
 
     def action(self, logic_function, ver=None):
@@ -54,15 +58,16 @@ class GAApiController(ApiController):
                 try_url_params=side_effect_free)
             if isinstance(request_data, dict):
                 id = request_data.get('id', '')
+                dataset = request_data.get('title', '')
+                method = c.environ['REQUEST_METHOD']
                 if 'q' in request_data:
                     id = request_data['q']
                 if 'query' in request_data:
                     id = request_data['query']
-                self._post_analytics(c.user, logic_function, '', id)
+                self._post_analytics(c.user, logic_function, '', id, dataset, method)
         except Exception, e:
             log.debug(e)
             pass
-
         return ApiController.action(self, logic_function, ver)
 
     def list(self, ver=None, register=None,
