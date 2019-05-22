@@ -17,6 +17,8 @@ import hashlib
 import threading
 import Queue
 
+import dbutil
+
 log = logging.getLogger('ckanext.googleanalytics')
 
 
@@ -232,7 +234,10 @@ class GoogleAnalyticsPlugin(p.SingletonPlugin):
         See ITemplateHelpers.
 
         '''
-        return {'googleanalytics_header': self.googleanalytics_header}
+        return {
+            'googleanalytics_header': self.googleanalytics_header,
+            'get_total_downloads': dbutil.get_total_downloads
+        }
 
     def googleanalytics_header(self):
         '''Render the googleanalytics_header snippet for CKAN 2.0 templates.

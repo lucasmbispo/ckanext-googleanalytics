@@ -193,6 +193,28 @@ Before ckanext-googleanalytics can retrieve statistics from Google Analytics, yo
 6. Find "User management" button in corresponding column. Add service account using Service account ID(email) generated in 3rd step and grant "Read" role to it.
 
 
+Event Tracking
+------------
+
+Run following command to load events (resource and package downloads for now) into database.
+
+```
+paster --plugin=ckanext-googleanalytics loadanalytics credentials.json internal [start date] -c production.ini
+```
+
+You can use helper function to get total downloads for resources and formats in your templates
+
+```
+# Total number of resource downloads
+{{ h.get_total_downloads(res.id, item_type='resource') }}
+
+# Total number of package downloads
+{{ h.get_total_downloads(pkg.id, item_type='package') }}
+```
+
+Note: Single resource downloads are counted as package downloads as well, even there are more than one resource there.
+
+
 Testing
 -------
 

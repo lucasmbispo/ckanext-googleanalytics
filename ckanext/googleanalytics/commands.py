@@ -66,6 +66,20 @@ class LoadAnalytics(CkanCommand):
         model.Session.configure(bind=model.meta.engine)
         self.parse_and_save()
 
+    def internal_save_downloads(self, downloads_data, summary_date):
+        engine = model.meta.engine
+        sql = '''DELETE FROM tracking_downloads
+                 WHERE download_date='%s';''' % summary_date
+        engine.execute(sql)
+        for resource_id, d_count in downloads_data.iteritems():
+            sql = "SELECT package_id FROM resource WHERE id=%s"
+            res = engine.execute(sql, resource_id).first()
+            package_id = res[0] if res else None
+            sql = '''INSERT INTO tracking_downloads
+                     (package_id, resource_id, downloads, download_date)
+                     VALUES (%s, %s, %s, %s);'''
+            engine.execute(sql, package_id, resource_id, d_count, summary_date)
+
     def internal_save(self, packages_data, summary_date):
         engine = model.meta.engine
         # clear out existing data before adding new
@@ -170,6 +184,11 @@ class LoadAnalytics(CkanCommand):
             log.info('%s received %s' % (len(packages_data), start_date))
             print '%s received %s' % (len(packages_data), start_date)
 
+            packages_data = self.get_ga_events(start_date=start_date,
+                                                 end_date=stop_date)
+            self.internal_save_downloads(packages_data, start_date)
+            time.sleep(0.25)
+
     def get_ga_data_new(self, start_date=None, end_date=None):
         """Get raw data from Google Analtyics for packages and
         resources.
@@ -216,6 +235,50 @@ class LoadAnalytics(CkanCommand):
             # rate limiting
             time.sleep(0.2)
         return packages
+
+    def get_ga_events(self, start_date=None, end_date=None):
+        """Get events from Google Analtyics for packages and
+        resources.
+
+        Returns a dictionary like::
+
+           {'identifier': 3}
+        """
+        start_date = start_date.strftime("%Y-%m-%d")
+        end_date = end_date.strftime("%Y-%m-%d")
+
+        resources = {}
+        metrics = 'ga:totalEvents'
+        sort = '-ga:totalEvents'
+
+        start_index = 1
+        max_results = 10000
+        # data retrival is chunked
+        completed = False
+        while not completed:
+            results = self.service.data().ga().get(ids='ga:%s' % self.profile_id,
+                                 dimensions='ga:eventLabel',
+                                 start_date=start_date,
+                                 start_index=start_index,
+                                 max_results=max_results,
+                                 metrics=metrics,
+                                 sort=sort,
+                                 end_date=end_date).execute()
+
+            result_count = len(results.get('rows', []))
+            if result_count < max_results:
+                completed = True
+
+            for result in results.get('rows', []):
+                resource = result[0]
+                count = result[1]
+                resources[resource] = int(count)
+
+            start_index += max_results
+
+            # rate limiting
+            time.sleep(0.2)
+        return resources
 
     def parse_and_save(self):
         """Grab raw data from Google Analytics and save to the database"""
