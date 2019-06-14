@@ -22,8 +22,8 @@ def init_tables():
                            Column('visits_recently', Integer),
                            Column('visits_ever', Integer))
     tracking_downloads = Table('tracking_downloads', metadata,
-                          Column('package_id', String(60)),
-                          Column('resource_id', String(60)),
+                          Column('package_id', String(256)),
+                          Column('resource_id', String(256)),
                           Column('downloads', Integer),
                           Column('download_date', Date))
     metadata.create_all(model.meta.engine)
