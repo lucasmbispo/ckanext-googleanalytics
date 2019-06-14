@@ -152,7 +152,7 @@ class LoadAnalytics(CkanCommand):
                  AND t1.package_id != '~~not~found~~';'''
         engine.execute(sql)
 
-    def bulk_import(self):
+    def bulk_import(self, downloads=False):
         if len(self.args) == 3:
             # Get summeries from specified date
             start_date = datetime.datetime.strptime(self.args[2], '%Y-%m-%d')
@@ -175,19 +175,21 @@ class LoadAnalytics(CkanCommand):
         end_date = datetime.datetime.now()
         while start_date < end_date:
             stop_date = start_date + datetime.timedelta(1)
-            packages_data = self.get_ga_data_new(start_date=start_date,
-                                                 end_date=stop_date)
-            self.internal_save(packages_data, start_date)
-            # sleep to rate limit requests
-            time.sleep(0.25)
+            if not downloads:
+                packages_data = self.get_ga_data_new(start_date=start_date,
+                                                     end_date=stop_date)
+                self.internal_save(packages_data, start_date)
+                # sleep to rate limit requests
+                time.sleep(0.25)
+            else:
+                packages_data = self.get_ga_events(start_date=start_date,
+                                                     end_date=stop_date)
+                self.internal_save_downloads(packages_data, start_date)
+                time.sleep(0.25)
+
             start_date = stop_date
             log.info('%s received %s' % (len(packages_data), start_date))
             print '%s received %s' % (len(packages_data), start_date)
-
-            packages_data = self.get_ga_events(start_date=start_date,
-                                                 end_date=stop_date)
-            self.internal_save_downloads(packages_data, start_date)
-            time.sleep(0.25)
 
     def get_ga_data_new(self, start_date=None, end_date=None):
         """Get raw data from Google Analtyics for packages and
@@ -295,9 +297,9 @@ class LoadAnalytics(CkanCommand):
         self.profile_id = get_profile_id(self.service)
 
         if len(self.args) > 1:
-            if len(self.args) > 2 and self.args[1].lower() != 'internal':
+            if len(self.args) > 2 and (self.args[1].lower() != 'internal' or self.args[1].lower() != 'downloads'):
                 raise Exception('Illegal argument %s' % self.args[1])
-            self.bulk_import()
+            self.bulk_import(downloads=self.args[1].lower()=='downloads')
         else:
             query = 'ga:pagePath=~%s,ga:pagePath=~%s' % \
                     (PACKAGE_URL, self.resource_url_tag)

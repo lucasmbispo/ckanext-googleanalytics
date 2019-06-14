@@ -199,7 +199,7 @@ Event Tracking
 Run following command to load events (resource and package downloads for now) into database.
 
 ```
-paster --plugin=ckanext-googleanalytics loadanalytics credentials.json internal [start date] -c production.ini
+paster --plugin=ckanext-googleanalytics loadanalytics credentials.json downloads [start date] -c production.ini
 ```
 
 You can use helper function to get total downloads for resources and formats in your templates
