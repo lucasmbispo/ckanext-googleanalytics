@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.1'
+version = '0.1-ed-1'
 
 setup(
 	name='ckanext-googleanalytics',
