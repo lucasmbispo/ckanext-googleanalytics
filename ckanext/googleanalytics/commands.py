@@ -156,6 +156,7 @@ class LoadAnalytics(CkanCommand):
         if len(self.args) == 3:
             # Get summeries from specified date
             start_date = datetime.datetime.strptime(self.args[2], '%Y-%m-%d')
+            log.debug("bulk_import(): specified start_date = %r", start_date)
         else:
             # No date given. See when we last have data for and get data
             # from 2 days before then in case new data is available.
@@ -172,7 +173,9 @@ class LoadAnalytics(CkanCommand):
                 start_date = combine(start_date, datetime.time(0))
             else:
                 start_date = datetime.datetime(2011, 1, 1)
+            log.debug("bulk_import(): computed start_date = %r", start_date)
         end_date = datetime.datetime.now()
+        log.debug("bulk_import(): end_date = %r", end_date)
         while start_date < end_date:
             stop_date = start_date + datetime.timedelta(1)
             if not downloads:
@@ -202,6 +205,7 @@ class LoadAnalytics(CkanCommand):
         start_date = start_date.strftime("%Y-%m-%d")
         end_date = end_date.strftime("%Y-%m-%d")
 
+        log.debug("get_ga_data_new(): start_date = %r, end_date = %r", start_date, end_date)
         packages = {}
         query = 'ga:pagePath=~%s,ga:pagePath=~%s' % \
                     (PACKAGE_URL, self.resource_url_tag)
@@ -213,6 +217,7 @@ class LoadAnalytics(CkanCommand):
         # data retrival is chunked
         completed = False
         while not completed:
+            log.debug("get_ga_data_new(): calling ga.get ...")
             results = self.service.data().ga().get(ids='ga:%s' % self.profile_id,
                                  filters=query,
                                  dimensions='ga:pagePath',
@@ -223,6 +228,8 @@ class LoadAnalytics(CkanCommand):
                                  sort=sort,
                                  end_date=end_date).execute()
             result_count = len(results.get('rows', []))
+            log.debug("get_ga_data_new(): ga.get returned %d results", result_count)
+            
             if result_count < max_results:
                 completed = True
 
@@ -236,6 +243,8 @@ class LoadAnalytics(CkanCommand):
 
             # rate limiting
             time.sleep(0.2)
+
+        log.debug("get_ga_data_new(): returning %d packages", len(packages.keys()))
         return packages
 
     def get_ga_events(self, start_date=None, end_date=None):
@@ -249,6 +258,8 @@ class LoadAnalytics(CkanCommand):
         start_date = start_date.strftime("%Y-%m-%d")
         end_date = end_date.strftime("%Y-%m-%d")
 
+        log.debug("get_ga_events(): start_date = %r, end_date = %r", start_date, end_date)
+        
         resources = {}
         metrics = 'ga:totalEvents'
         sort = '-ga:totalEvents'
@@ -258,6 +269,7 @@ class LoadAnalytics(CkanCommand):
         # data retrival is chunked
         completed = False
         while not completed:
+            log.debug("get_ga_events(): calling ga.get ...")
             results = self.service.data().ga().get(ids='ga:%s' % self.profile_id,
                                  dimensions='ga:eventLabel',
                                  start_date=start_date,
@@ -268,6 +280,7 @@ class LoadAnalytics(CkanCommand):
                                  end_date=end_date).execute()
 
             result_count = len(results.get('rows', []))
+            log.debug("get_ga_events(): ga.get returned %d results", result_count)
             if result_count < max_results:
                 completed = True
 
@@ -280,6 +293,8 @@ class LoadAnalytics(CkanCommand):
 
             # rate limiting
             time.sleep(0.2)
+
+        log.debug("get_ga_events(): returning %d resources", len(resources.keys()))
         return resources
 
     def parse_and_save(self):
@@ -290,12 +305,15 @@ class LoadAnalytics(CkanCommand):
         if not os.path.exists(tokenfile):
             raise Exception('Cannot find the token file %s' % self.args[0])
 
+        log.debug("parse_and_save(): reading token file %s", tokenfile)
         try:
             self.service = init_service(self.args[0])
         except TypeError as e:
             raise Exception('Unable to create a service: {0}'.format(e))
         self.profile_id = get_profile_id(self.service)
 
+        log.debug("parse_and_save(): args = %r", self.args)
+        
         if len(self.args) > 1:
             if len(self.args) > 2 and (self.args[1].lower() != 'internal' or self.args[1].lower() != 'downloads'):
                 raise Exception('Illegal argument %s' % self.args[1])
@@ -350,6 +368,8 @@ class LoadAnalytics(CkanCommand):
         if not sort:
             sort = '-ga:uniquePageviews'
 
+        log.debug("ga_query(): from_date = %r, to_date = %r", from_date, to_date)
+        
         print '%s -> %s' % (from_date, to_date)
 
         results = self.service.data().ga().get(ids='ga:' + self.profile_id,
@@ -362,6 +382,8 @@ class LoadAnalytics(CkanCommand):
                                       filters=query_filter,
                                       max_results=max_results
                                       ).execute()
+        result_count = len(results.get('rows', []))
+        log.debug("ga_query() ga.get returned %d results", result_count)
         return results
 
     def get_ga_data(self, query_filter=None, start_date=None, end_date=None):
@@ -372,6 +394,9 @@ class LoadAnalytics(CkanCommand):
 
            {'identifier': {'recent':3, 'ever':6}}
         """
+
+        log.debug('get_ga_data(): start_date = %r, end_date = %r', start_date, end_date)
+
         now = datetime.datetime.now()
         recent_date = now - datetime.timedelta(14)
         recent_date = recent_date.strftime("%Y-%m-%d")
@@ -379,8 +404,13 @@ class LoadAnalytics(CkanCommand):
         packages = {}
         queries = ['ga:pagePath=~%s' % PACKAGE_URL]
         dates = {'recent': recent_date, 'ever': floor_date}
+
+        log.debug('get_ga_data(): looping; recent_date = %r, floor_date = %r', recent_date,
+                  floor_date)
+        
         for date_name, date in dates.iteritems():
             for query in queries:
+                log.debug("get_ga_data(): calling ga_query(from_date=%r)", date)
                 results = self.ga_query(query_filter=query,
                                         metrics='ga:uniquePageviews',
                                         from_date=date)
@@ -391,6 +421,8 @@ class LoadAnalytics(CkanCommand):
                             package = '/' + '/'.join(package.split('/')[2:])
 
                         count = result[1]
+                        log.debug("get_ga_data(): package = %r, count = %d", package, count)
+
                         # Make sure we add the different representations of the same
                         # dataset /mysite.com & /www.mysite.com ...
                         val = 0
