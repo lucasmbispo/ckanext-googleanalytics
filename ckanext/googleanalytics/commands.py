@@ -72,6 +72,9 @@ class LoadAnalytics(CkanCommand):
         engine = model.meta.engine
         sql = '''DELETE FROM tracking_downloads
                  WHERE download_date='%s';''' % summary_date
+        log.debug("internal_save_downloads(# downloads = %d, date = %r)", 
+                  len(downloads_data), summary_date)
+        log.debug("internal_save_downloads: SQL %r", sql)
         engine.execute(sql)
         for resource_id, d_count in downloads_data.iteritems():
             sql = "SELECT package_id FROM resource WHERE id=%s"
@@ -81,12 +84,17 @@ class LoadAnalytics(CkanCommand):
                      (package_id, resource_id, downloads, download_date)
                      VALUES (%s, %s, %s, %s);'''
             engine.execute(sql, package_id, resource_id, d_count, summary_date)
+            log.debug("internal_save_downloads: SQL %r; %r, %r, %r, %r", sql, 
+                      package_id, resource_id, d_count, summary_date)
 
     def internal_save(self, packages_data, summary_date):
         engine = model.meta.engine
         # clear out existing data before adding new
         sql = '''DELETE FROM tracking_summary
                  WHERE tracking_date='%s'; ''' % summary_date
+        log.debug("internal_save(# packages = %d, date = %r)",
+                  len(packages_data), summary_date)
+        log.debug("internal_save: SQL %r", sql)
         engine.execute(sql)
 
         for url, count in packages_data.iteritems():
@@ -100,6 +108,9 @@ class LoadAnalytics(CkanCommand):
             sql = '''INSERT INTO tracking_summary
                      (url, count, tracking_date, tracking_type)
                      VALUES (%s, %s, %s, %s);'''
+            log.debug("internal_save: SQL %r; %r, %r, %r, %r", sql,
+                      url, count, tracking_date, tracking_type)
+
             engine.execute(sql, url, count, summary_date, tracking_type)
 
         # get ids for dataset urls
@@ -108,6 +119,7 @@ class LoadAnalytics(CkanCommand):
                      (SELECT id FROM package p WHERE t.url =  %s || p.name)
                      ,'~~not~found~~')
                  WHERE t.package_id IS NULL AND tracking_type = 'page';'''
+        log.debug("internal_save: SQL %r; %r", sql, PACKAGE_URL)
         engine.execute(sql, PACKAGE_URL)
 
         # get ids for dataset edit urls which aren't captured otherwise
@@ -116,6 +128,7 @@ class LoadAnalytics(CkanCommand):
                      (SELECT id FROM package p WHERE t.url =  %s || p.name)
                      ,'~~not~found~~')
                  WHERE t.package_id = '~~not~found~~' AND tracking_type = 'page';'''
+        log.debug("internal_save: SQL %r; %r", sql, '%sedit/' % PACKAGE_URL)
         engine.execute(sql, '%sedit/' % PACKAGE_URL)
 
         # update summary totals for resources
@@ -133,6 +146,7 @@ class LoadAnalytics(CkanCommand):
                     AND t2.tracking_date <= t1.tracking_date AND t2.tracking_date >= t1.tracking_date - 14
                  ) + t1.count
                  WHERE t1.running_total = 0 AND tracking_type = 'resource';'''
+        log.debug("internal_save: SQL %r", sql)
         engine.execute(sql)
 
         # update summary totals for pages
@@ -152,9 +166,11 @@ class LoadAnalytics(CkanCommand):
                  WHERE t1.running_total = 0 AND tracking_type = 'page'
                  AND t1.package_id IS NOT NULL
                  AND t1.package_id != '~~not~found~~';'''
+        log.debug("internal_save: SQL %r", sql)
         engine.execute(sql)
 
     def bulk_import(self, downloads=False):
+        log.debug("build_import(downloads=%r)", downloads)
         if len(self.args) == 3:
             # Get summeries from specified date
             start_date = datetime.datetime.strptime(self.args[2], '%Y-%m-%d')
@@ -180,6 +196,7 @@ class LoadAnalytics(CkanCommand):
         log.debug("bulk_import(): end_date = %r", end_date)
         while start_date < end_date:
             stop_date = start_date + datetime.timedelta(1)
+            log.debug("bulk_import() loop; start_date=%r, stop_date=%r", start_date, stop_date)
             if not downloads:
                 packages_data = self.get_ga_data_new(start_date=start_date,
                                                      end_date=stop_date)
