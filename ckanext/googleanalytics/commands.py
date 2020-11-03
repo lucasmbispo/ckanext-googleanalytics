@@ -11,6 +11,8 @@ import ckan.model as model
 import dbutil
 
 log = logging.getLogger('ckanext.googleanalytics')
+log.setLevel(logging.DEBUG)
+
 PACKAGE_URL = '/dataset/'  # XXX get from routes...
 DEFAULT_RESOURCE_URL_TAG = '/downloads/'
 
