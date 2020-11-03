@@ -109,7 +109,7 @@ class LoadAnalytics(CkanCommand):
                      (url, count, tracking_date, tracking_type)
                      VALUES (%s, %s, %s, %s);'''
             log.debug("internal_save: SQL %r; %r, %r, %r, %r", sql,
-                      url, count, tracking_date, tracking_type)
+                      url, count, summary_date, tracking_type)
 
             engine.execute(sql, url, count, summary_date, tracking_type)
 
