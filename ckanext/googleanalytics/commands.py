@@ -3,6 +3,7 @@ import re
 import logging
 import datetime
 import time
+from urllib import unquote
 
 from pylons import config as pylonsconfig
 from ckan.lib.cli import CkanCommand
@@ -11,12 +12,12 @@ import ckan.model as model
 import dbutil
 
 log = logging.getLogger('ckanext.googleanalytics')
-PACKAGE_URL = '/dataset/'  # XXX get from routes...
+PACKAGE_URL = '/'  # XXX get from routes...
 DEFAULT_RESOURCE_URL_TAG = '/downloads/'
 
 RESOURCE_URL_REGEX = re.compile('/dataset/[a-z0-9-_]+/resource/([a-z0-9-_]+)')
+RESOURCE_URL_DOWNLOAD_REGEX = re.compile('[a-z0-9-_:.//]+/dataset/[a-z0-9-_]+/resource/([a-z0-9-_]+)/download')
 DATASET_EDIT_REGEX = re.compile('/dataset/edit/([a-z0-9-_]+)')
-
 
 class InitDB(CkanCommand):
     """Initialise the local stats database tables
@@ -71,7 +72,11 @@ class LoadAnalytics(CkanCommand):
         sql = '''DELETE FROM tracking_downloads
                  WHERE download_date='%s';''' % summary_date
         engine.execute(sql)
-        for resource_id, d_count in downloads_data.iteritems():
+        for identifier, d_count in downloads_data.iteritems():   
+            resource_id = unquote(identifier).decode('utf8')
+            matches = RESOURCE_URL_DOWNLOAD_REGEX.match(resource_id)
+            if matches:
+                resource_id = matches.group(1)
             sql = "SELECT package_id FROM resource WHERE id=%s"
             res = engine.execute(sql, resource_id).first()
             package_id = res[0] if res else None
@@ -297,7 +302,7 @@ class LoadAnalytics(CkanCommand):
         self.profile_id = get_profile_id(self.service)
 
         if len(self.args) > 1:
-            if len(self.args) > 2 and (self.args[1].lower() != 'internal' or self.args[1].lower() != 'downloads'):
+            if len(self.args) > 3 and (self.args[1].lower() != 'internal' or self.args[1].lower() != 'downloads'):
                 raise Exception('Illegal argument %s' % self.args[1])
             self.bulk_import(downloads=self.args[1].lower()=='downloads')
         else:
