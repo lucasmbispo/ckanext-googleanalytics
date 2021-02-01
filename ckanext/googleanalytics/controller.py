@@ -63,7 +63,8 @@ class GAApiController(ApiController):
                     "ec":  "Frontend/Data Explorer CKAN API Request"
                 })
             
-            if request.headers.get("User-Agent", '').startswith(("ckan-datapusher/latest", "ckan-others/latest")):
+            if request.headers.get("User-Agent", '').startswith(("ckan-datapusher/latest", "ckan-others/latest")) \
+              or (request.headers.get("Request-Source", '') in ["ckan-internal"]):
                 data_dict.update({
                     "ec":  "CKAN API internal Request"
                 })
