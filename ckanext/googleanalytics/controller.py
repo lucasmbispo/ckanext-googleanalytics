@@ -58,10 +58,10 @@ class GAApiController(ApiController):
             }
              
             '''
-              Many other internal service using CKAN APIs eg. frontend-v2, data-subscription, dataexplorer.
+              Many other internal service also using CKAN APIs eg. frontend-v2, data-subscription, dataexplorer.
               so, filtering internal request by user-agent and headers to avoid tracking. 
             '''
-            internal_req_headers = request.headers.get("Request-Source", '') in ["data-explorer", "ckan-internal"], 
+            internal_req_headers = request.headers.get("Request-Source", '') in ["data-explorer", "ckan-internal"]
                                            
             internal_req_user_agent = request.headers.get("User-Agent", '') \
                                 .startswith(("frontend-v2/latest", "data-explorer/next-gen" \
