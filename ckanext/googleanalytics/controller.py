@@ -56,28 +56,20 @@ class GAApiController(ApiController):
                 "ea": request_obj_type + request_function,
                 "el": id,
             }
-            # overide the event category if request call is internal
-            if request.headers.get("User-Agent", '').startswith(("frontend-v2/latest", "data-explorer/next-gen")) \
-              or (request.headers.get("Request-Source", '') in ["data-explorer"]):  
-                data_dict.update({
-                    "ec":  "Frontend/Data Explorer CKAN API Request"
-                })
-            
-            if request.headers.get("User-Agent", '').startswith(("ckan-datapusher/latest", "ckan-others/latest")) \
-              or (request.headers.get("Request-Source", '') in ["ckan-internal"]):
-                data_dict.update({
-                    "ec":  "CKAN API internal Request"
-                })
-                
-            if request.headers.get("User-Agent", '').startswith(("data-subscription/latest")):
-                data_dict.update({
-                    "ec":  "Data Subscription CKAN API Request"
-                })
+             
+            '''
+              Many other internal service also using CKAN APIs eg. frontend-v2, data-subscription, dataexplorer.
+              so, filtering internal request by user-agent and headers to avoid tracking. 
+            '''
+            is_it_internal_request = (request.headers.get("Request-Source", '') in ["data-explorer", "ckan-internal"]) or \
+                                      request.headers.get("User-Agent", '').startswith(("frontend-v2/latest", "data-explorer/next-gen" \
+                                      "ckan-datapusher/latest", "ckan-others/latest", "data-subscription/latest")) 
 
-            params_dict = self._ga_prepare_parameter(
-                request_obj_type, request_function, ids)
-            data_dict.update(params_dict)
-            plugin.GoogleAnalyticsPlugin.analytics_queue.put(data_dict)
+            if not is_it_internal_request:  
+                params_dict = self._ga_prepare_parameter(
+                    request_obj_type, request_function, ids)
+                data_dict.update(params_dict)
+                plugin.GoogleAnalyticsPlugin.analytics_queue.put(data_dict)
 
     def _ga_prepare_parameter(self, request_obj_type, request_function, ids):
         '''
