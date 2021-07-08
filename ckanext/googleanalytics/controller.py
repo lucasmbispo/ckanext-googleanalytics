@@ -62,7 +62,7 @@ class GAApiController(ApiController):
               so, filtering internal request by user-agent and headers to avoid tracking. 
             '''
             is_it_internal_request = (request.headers.get("Request-Source", '') in ["data-explorer", "ckan-internal"]) or \
-                                      request.headers.get("User-Agent", '').startswith(("frontend-v2/latest", "data-explorer/next-gen" \
+                                      request.headers.get("User-Agent", '').startswith(("frontend-v2/latest", "data-explorer/next-gen", \
                                       "ckan-datapusher/latest", "ckan-others/latest", "data-subscription/latest")) 
 
             blacklisted_actions = ["status_show"]
