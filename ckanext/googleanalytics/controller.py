@@ -61,17 +61,15 @@ class GAApiController(ApiController):
               Many other internal service also using CKAN APIs eg. frontend-v2, data-subscription, dataexplorer.
               so, filtering internal request by user-agent and headers to avoid tracking. 
             '''
-            internal_req_headers = request.headers.get("Request-Source", '') in ["data-explorer", "ckan-internal"]
-                                           
-            internal_req_user_agent = request.headers.get("User-Agent", '') \
-                                .startswith(("frontend-v2/latest", "data-explorer/next-gen" \
-                                "ckan-datapusher/latest", "ckan-others/latest", "data-subscription/latest")) 
-            
-            if (not internal_req_headers) or (not internal_req_user_agent):  
-              params_dict = self._ga_prepare_parameter(
-                  request_obj_type, request_function, ids)
-              data_dict.update(params_dict)
-              plugin.GoogleAnalyticsPlugin.analytics_queue.put(data_dict)
+            is_it_internal_request = (request.headers.get("Request-Source", '') in ["data-explorer", "ckan-internal"]) or \
+                                      request.headers.get("User-Agent", '').startswith(("frontend-v2/latest", "data-explorer/next-gen" \
+                                      "ckan-datapusher/latest", "ckan-others/latest", "data-subscription/latest")) 
+
+            if not is_it_internal_request:  
+                params_dict = self._ga_prepare_parameter(
+                    request_obj_type, request_function, ids)
+                data_dict.update(params_dict)
+                plugin.GoogleAnalyticsPlugin.analytics_queue.put(data_dict)
 
     def _ga_prepare_parameter(self, request_obj_type, request_function, ids):
         '''
