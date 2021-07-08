@@ -65,7 +65,9 @@ class GAApiController(ApiController):
                                       request.headers.get("User-Agent", '').startswith(("frontend-v2/latest", "data-explorer/next-gen" \
                                       "ckan-datapusher/latest", "ckan-others/latest", "data-subscription/latest")) 
 
-            if not is_it_internal_request:  
+            blacklisted_actions = ["status_show"]
+
+            if not is_it_internal_request and request_obj_type not in blacklisted_actions:  
                 params_dict = self._ga_prepare_parameter(
                     request_obj_type, request_function, ids)
                 data_dict.update(params_dict)
