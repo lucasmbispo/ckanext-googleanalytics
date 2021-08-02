@@ -41,8 +41,7 @@ class AnalyticsPostThread(threading.Thread):
     def run(self):
         while True:
             # grabs host from queue
-            data_dict = self.queue.get()
-
+            data_dict = dict([(k, v.encode('utf-8')) for k, v in self.queue.get().items()])
             data = urlencode(data_dict)
             log.debug("Sending API event to Google Analytics: " + data)
             # send analytics
