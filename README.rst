@@ -49,6 +49,8 @@ Installation
    so you may want to set up a new gmail account specifically for
    accessing your gmail profile.
 
+   When creating a **property** with Google analytics 4, enable ``Create a Universal Analytics property`` to get the UA id in the advanced options required for this extension.
+
 3. Edit again your configuration ini file to activate the plugin
    with:
 
@@ -105,11 +107,11 @@ See `Googles' documentation<https://support.google.com/analytics/answer/1034342?
 Setting Up Statistics Retrieval from Google Analytics
 -----------------------------------------------------
 
-1. Run the following command from ``src/ckanext-googleanalytics`` to
+1. Run the following command to
    set up the required database tables (of course, altering the
    ``--config`` option to point to your site config file)::
 
-       paster initdb --config=../ckan/development.ini
+       ckan --config=/srv/app/ckan.ini googleanalytics init
 
 2. Optionally, add::
 
@@ -124,10 +126,10 @@ Setting Up Statistics Retrieval from Google Analytics
 
 5. Wait a while for some stats to be recorded in Google
 
-6. Import Google stats by running the following command from
-   ``src/ckanext-googleanalytics``::
+6. Import Google stats by running the following 
+   command ::
 
-       paster loadanalytics credentials.json --config=../ckan/development.ini
+       ckan --config=/srv/app/ckan.ini googleanalytics init
 
    (Of course, pointing config at your specific site config and credentials.json at the
    key file obtained from the authorization step)
@@ -158,7 +160,7 @@ Before ckanext-googleanalytics can retrieve statistics from Google Analytics, yo
 
 3. In the `Service accounts pane <https://console.developers.google.com/iam-admin/serviceaccounts>`_ choose your project and create new account. During creation check "Furnish a new private key" -> JSON type. Write down "Service account ID"(looks like email) - it will be used later.
 
-4. Save downloaded file - it will be used by `loadanalytics` command(referenced as <credentials.json>)
+4. Save downloaded file - it will be used by `load` command(referenced as <credentials.json>)
 
 5. Go to `GoogleAnalytics console <https://analytics.google.com/analytics/web/#management>`_ and chose ADMIN tab.
 
