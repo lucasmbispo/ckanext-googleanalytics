@@ -15,6 +15,7 @@ import ckan.plugins as p
 import ckan.plugins.toolkit as tk
 
 from ckan.exceptions import CkanVersionException
+from ckanext.googleanalytics import dbutil
 
 DEFAULT_RESOURCE_URL_TAG = "/downloads/"
 
@@ -129,7 +130,10 @@ class GoogleAnalyticsPlugin(GAMixinPlugin, p.SingletonPlugin):
         See ITemplateHelpers.
 
         """
-        return {"googleanalytics_header": self.googleanalytics_header}
+        return {
+            "googleanalytics_header": self.googleanalytics_header,
+            "get_total_downloads": dbutil.get_total_downloads
+        }
 
     def googleanalytics_header(self):
         """Render the googleanalytics_header snippet for CKAN 2.0 templates.

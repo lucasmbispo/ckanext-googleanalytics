@@ -47,7 +47,7 @@ def load(credentials, start_date):
     """Parse data from Google Analytics API and store it
     in a local database
     """
-    from .ga_auth import init_service, get_profile_id
+    from ckanext.googleanalytics.ga_auth import init_service, get_profile_id
 
     try:
         service = init_service(credentials)

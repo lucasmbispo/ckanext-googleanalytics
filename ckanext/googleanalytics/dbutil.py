@@ -1,4 +1,5 @@
 from sqlalchemy import Table, Column, Integer, String, MetaData
+from sqlalchemy import Table, Column, Integer, String, Date, MetaData
 from sqlalchemy.sql import select, text
 from sqlalchemy import func
 
@@ -26,6 +27,11 @@ def init_tables():
         Column("visits_recently", Integer),
         Column("visits_ever", Integer),
     )
+    tracking_downloads = Table('tracking_downloads', metadata,
+                          Column('package_id', String(256)),
+                          Column('resource_id', String(256)),
+                          Column('downloads', Integer),
+                          Column('download_date', Date))
     metadata.create_all(model.meta.engine)
 
 
@@ -131,3 +137,34 @@ def get_top_resources(limit=20):
             continue
         items.append((item.first(), recent, ever))
     return items
+
+def get_resource_downloads(limit=20):
+    items = []
+    connection = model.Session.connection()
+    resource_stats = get_table('resource_stats')
+    s = select([resource_stats.c.resource_id,
+                resource_stats.c.visits_recently,
+                resource_stats.c.visits_ever])\
+                .order_by(resource_stats.c.visits_recently.desc())
+    res = connection.execute(s).fetchmany(limit)
+    for resource_id, recent, ever in res:
+        item = model.Session.query(model.Resource)\
+               .filter("resource.id = '%s'" % resource_id)
+        if not item.count():
+            continue
+        items.append((item.first(), recent, ever))
+    return items
+
+
+def get_total_downloads(item_id=None, item_type='resource'):
+    connection = model.Session.connection()
+    total_downloads = 0
+    if item_type == 'resource':
+        total_downloads = connection.execute(
+            text("""SELECT sum(downloads) FROM tracking_downloads
+            WHERE resource_id = :resource_id"""), resource_id=item_id).fetchone()[0] or 0
+    elif item_type == 'package':
+        total_downloads = connection.execute(
+            text("""SELECT sum(downloads) FROM tracking_downloads
+            WHERE package_id = :package_id"""), package_id=item_id).fetchone()[0] or 0
+    return total_downloads
