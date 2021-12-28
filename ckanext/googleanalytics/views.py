@@ -74,10 +74,10 @@ def download(id, resource_id, filename=None, package_type="dataset"):
 
 
 ga.add_url_rule(
-    "/dataset/<id>/resource/<resource_id>/download/tracking", view_func=download
+    "/dataset/<id>/resource/<resource_id>/download", view_func=download
 )
 ga.add_url_rule(
-    "/dataset/<id>/resource/<resource_id>/download/<filename>/tracking",
+    "/dataset/<id>/resource/<resource_id>/download/<filename>",
     view_func=download,
 )
 
