@@ -10,6 +10,7 @@ import ckan.logic as logic
 import ckan.plugins.toolkit as tk
 import ckan.views.api as api
 import ckan.views.resource as resource
+import ckan.lib.helpers as h
 
 from ckan.common import g
 
@@ -56,14 +57,27 @@ def download(id, resource_id, filename=None, package_type="dataset"):
         "Download",
         resource_id,
     )
+
+    # Check if s3filestore is enabled
+    plugins = str(tk.config.get("ckan.plugins")).split()
+    if "s3filestore" in plugins:
+        url = h.url_for(
+            controller='ckanext.s3filestore.controller:S3Controller',
+            action='resource_download',
+            id=id,
+            resource_id=resource_id,
+            filename=filename
+        )
+        return h.redirect_to(url)
+
     return resource.download(package_type, id, resource_id, filename)
 
 
 ga.add_url_rule(
-    "/dataset/<id>/resource/<resource_id>/download", view_func=download
+    "/dataset/<id>/resource/<resource_id>/download/tracking", view_func=download
 )
 ga.add_url_rule(
-    "/dataset/<id>/resource/<resource_id>/download/<filename>",
+    "/dataset/<id>/resource/<resource_id>/download/<filename>/tracking",
     view_func=download,
 )
 
