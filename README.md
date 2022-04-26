@@ -191,3 +191,13 @@ linked to from other locations.
 We could also embed extra metadata information in tracking links, to
 enable reports on particular types of data (e.g. most popular data
 format by country of origin, or most downloaded resource by license)
+
+## Integration Process for FCSC
+
+1) change ckan/ckanext-googleanalytics to datopian/ckanext-googleanalytics in dockerfile
+```
+RUN pip install -e  git+https://github.com/datopian/ckanext-googleanalytics.git@ef65a390fe420f6cce6ff52ba51819272ab36373#egg=ckanext-googleanalytics && \
+    pip install -r  https://raw.githubusercontent.com/datopian/ckanext-googleanalytics/fcsc/requirements.txt
+```
+2) update google-analytics config variables
+3) add cron jobs to fetch analytics data and load them into the DB. this should be done manually at first so that the necessary table will be included when the package and resource page is loaded and to prevent error
