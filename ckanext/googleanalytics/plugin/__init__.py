@@ -12,7 +12,7 @@ import requests
 import ckan.lib.helpers as h
 import ckan.plugins as p
 import ckan.plugins.toolkit as tk
-
+from ckanext.googleanalytics.actions import resource_stat , package_stat
 from ckan.exceptions import CkanVersionException
 
 DEFAULT_RESOURCE_URL_TAG = "/downloads/"
@@ -48,7 +48,8 @@ class AnalyticsPostThread(threading.Thread):
             # send analytics
             res = requests.post(
                 "http://www.google-analytics.com/collect",
-                data,
+                headers={'user-agent': 'CPython/2.7'},
+                data=data,
                 timeout=10,
             )
             # signals to queue job is done
@@ -59,6 +60,13 @@ class GoogleAnalyticsPlugin(GAMixinPlugin, p.SingletonPlugin):
     p.implements(p.IConfigurable, inherit=True)
     p.implements(p.IConfigurer, inherit=True)
     p.implements(p.ITemplateHelpers)
+    p.implements(p.IActions)
+
+    def get_actions(self):
+        return {
+            'resource_stats': resource_stat,
+            'package_stats': package_stat
+        }
 
     def configure(self, config):
         """Load config settings for this extension from config file.

@@ -1,9 +1,10 @@
 from sqlalchemy import Table, Column, Integer, String, MetaData
 from sqlalchemy.sql import select, text
 from sqlalchemy import func
-
+import logging
 import ckan.model as model
 
+log = logging.getLogger(__name__)
 # from ckan.model.authz import PSEUDO_USER__VISITOR
 from ckan.lib.base import *
 
@@ -131,3 +132,23 @@ def get_top_resources(limit=20):
             continue
         items.append((item.first(), recent, ever))
     return items
+
+
+def get_resource_stat(resource_id):
+    connection = model.Session.connection()
+    resource_stats = get_table("resource_stats")
+    s = select(
+        [resource_stats.c.visits_ever]
+    ).where(resource_stats.c.resource_id == resource_id)
+    res = connection.execute(s).fetchone()
+    return res
+
+def get_package_stat(package_id):
+    connection = model.Session.connection()
+    package_stats = get_table("package_stats")
+    s = select(
+        [package_stats.c.package_id]
+    ).where(package_stats.c.resource_id == package_id)
+    res = connection.execute(s).fetchone()
+    return res
+    
