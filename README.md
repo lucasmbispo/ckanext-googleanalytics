@@ -200,4 +200,13 @@ RUN pip install -e  git+https://github.com/datopian/ckanext-googleanalytics.git@
     pip install -r  https://raw.githubusercontent.com/datopian/ckanext-googleanalytics/fcsc/requirements.txt
 ```
 2) update google-analytics config variables
-3) add cron jobs to fetch analytics data and load them into the DB. this should be done manually at first so that the necessary table will be included when the package and resource page is loaded and to prevent error
+3) download google service account credentials `credential.json`
+4) store in `ckan/` in the deployment repo and update the dockerfile
+```
+COPY credentials.json ${APP_DIR}
+```
+6) add cron jobs to fetch analytics data and load them into the DB. this should be done manually at first so that the necessary table will be included when the package and resource page is loaded and to prevent error
+To initally create the analytics table 
+```
+ckan -c ckan.ini googleanalytics init
+```
