@@ -57,7 +57,7 @@ class AnalyticsPostThread(threading.Thread):
 
 
 class GoogleAnalyticsPlugin(GAMixinPlugin, p.SingletonPlugin):
-    p.implements(p.IConfigurable, inherit=True)
+    p.implements(p.IConfigurable)
     p.implements(p.IConfigurer, inherit=True)
     p.implements(p.ITemplateHelpers)
     p.implements(p.IActions)
@@ -116,7 +116,7 @@ class GoogleAnalyticsPlugin(GAMixinPlugin, p.SingletonPlugin):
             config.get("googleanalytics.enable_user_id", False)
         )
 
-        p.toolkit.add_resource("../assets", "ckanext-googleanalytics")
+        # p.toolkit.add_resource("../assets", "ckanext-googleanalytics")
 
         # spawn a pool of 5 threads, and pass them queue instance
         for i in range(5):
@@ -131,6 +131,7 @@ class GoogleAnalyticsPlugin(GAMixinPlugin, p.SingletonPlugin):
 
         """
         p.toolkit.add_template_directory(config, "../templates")
+        p.toolkit.add_resource('../assets', 'ckanext-googleanalytics')
 
     def get_helpers(self):
         """Return the CKAN 2.0 template helper functions this plugin provides.
