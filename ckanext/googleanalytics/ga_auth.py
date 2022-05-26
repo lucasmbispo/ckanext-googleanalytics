@@ -1,5 +1,5 @@
 import httplib2
-from apiclient.discovery import build
+from apiclient import discovery
 from oauth2client.service_account import ServiceAccountCredentials
 
 from ckan.exceptions import CkanVersionException
@@ -36,7 +36,7 @@ def init_service(credentials_file):
     credentials = _prepare_credentials(credentials_file)
     http = credentials.authorize(http)  # authorize the http object
 
-    return build("analytics", "v3", http=http)
+    return discovery.build("analytics", "v3", http=http, cache_discovery=False)
 
 
 def get_profile_id(service):

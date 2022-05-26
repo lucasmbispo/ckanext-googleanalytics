@@ -45,6 +45,13 @@ ga.add_url_rule(
     view_func=action,
 )
 ga.add_url_rule(
+    u"/api/<int(min=1, max={0}):ver>/action/<logic_function>".format(
+        api.API_MAX_VERSION
+    ),
+    methods=["GET", "POST"],
+    view_func=action,
+)
+ga.add_url_rule(
     u"/<int(min=3, max={0}):ver>/action/<logic_function>".format(
         api.API_MAX_VERSION
     ),
