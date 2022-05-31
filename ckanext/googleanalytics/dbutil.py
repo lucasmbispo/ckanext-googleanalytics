@@ -147,8 +147,8 @@ def get_package_stat(package_id):
     connection = model.Session.connection()
     package_stats = get_table("package_stats")
     s = select(
-        [package_stats.c.package_id]
-    ).where(package_stats.c.resource_id == package_id)
+        [package_stats.c.visits_ever]
+    ).where(package_stats.c.package_id == package_id)
     res = connection.execute(s).fetchone()
     return res
     
