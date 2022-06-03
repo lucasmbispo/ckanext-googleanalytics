@@ -61,15 +61,13 @@ ga.add_url_rule(
 
 
 def download(id, resource_id, filename=None, package_type="dataset"):
-    handler_path = tk.config.get(CONFIG_HANDLER_PATH)
-    if handler_path:
-        handler = import_string(handler_path, silent=True)
-    else:
-        handler = None
-        log.warning(("Missing {} config option.").format(CONFIG_HANDLER_PATH))
-    if not handler:
+    try:
+        from ckanext.cloudstorage.views.resource_download import resource_download
+        handler_path = resource_download
+    except ImportError:
         log.debug("Use default CKAN callback for resource.download")
-        handler = resource.download
+        handler_path = resource.download
+
     _post_analytics(
         g.user,
         "CKAN Resource Download Request",
@@ -77,8 +75,7 @@ def download(id, resource_id, filename=None, package_type="dataset"):
         "Download",
         resource_id,
     )
-    return handler(
-        package_type=package_type,
+    return handler_path(
         id=id,
         resource_id=resource_id,
         filename=filename,
