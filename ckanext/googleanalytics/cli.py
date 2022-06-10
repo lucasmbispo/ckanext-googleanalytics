@@ -7,7 +7,11 @@ import re
 import logging
 import click
 import ckan.model as model
-
+from google.analytics.data_v1beta import BetaAnalyticsDataClient
+from google.analytics.data_v1beta.types import DateRange
+from google.analytics.data_v1beta.types import Dimension
+from google.analytics.data_v1beta.types import Metric
+from google.analytics.data_v1beta.types import RunReportRequest
 from . import dbutil
 
 import ckan.plugins.toolkit as tk
@@ -49,21 +53,29 @@ def load(credentials, start_date):
     from .ga_auth import init_service, get_profile_id
 
     try:
-        service = init_service(credentials)
+        if tk.config.get("googleanalytics.measurement_id"):
+            service = BetaAnalyticsDataClient.from_service_account_file(credentials)
+        else:
+            service = init_service(credentials)
+            profile_id = get_profile_id(service)     
     except TypeError as e:
         raise Exception("Unable to create a service: {0}".format(e))
-    profile_id = get_profile_id(service)
-
+    
     if start_date:
         bulk_import(service, profile_id, start_date)
     else:
-        query = "ga:pagePath=~%s,ga:pagePath=~%s" % (
-            PACKAGE_URL,
-            _resource_url_tag(),
-        )
-        packages_data = get_ga_data(service, profile_id, query_filter=query)
-        save_ga_data(packages_data)
-        log.info("Saved %s records from google" % len(packages_data))
+        if tk.config.get("googleanalytics.measurement_id"):
+            packages_data = get_ga4_data(service)
+            save_ga_data(packages_data)
+            log.info("Saved %s records from google" % len(packages_data))
+        else:
+            query = "ga:pagePath=~%s,ga:pagePath=~%s" % (
+                PACKAGE_URL,
+                _resource_url_tag(),
+            )
+            packages_data = get_ga_data(service, profile_id, query_filter=query)
+            save_ga_data(packages_data)
+            log.info("Saved %s records from google" % len(packages_data))
 
 
 def _resource_url_tag():
@@ -358,6 +370,39 @@ def get_ga_data(service, profile_id, query_filter):
                     val = 0
                     if package in packages and date_name in packages[package]:
                         val += packages[package][date_name]
+                    packages.setdefault(package, {})[date_name] = (
+                        int(count) + val
+                    )
+    return packages
+
+
+def get_ga4_data(client):
+    packages = {}
+    property_id = tk.config.get("googleanalytics.property_id")
+    dates = {
+        "recent": [DateRange(start_date="{}daysAgo".format(_recent_view_days()), end_date="today")],
+        "ever": [DateRange(start_date="2005-01-01", end_date="today")]
+    }
+    
+    for date_name, date in list(dates.items()):
+        request = RunReportRequest(
+            property=f"properties/{property_id}",
+            dimensions=[Dimension(name="eventName"), Dimension(name="pagePath") ],
+            metrics=[Metric(name="eventCount")],
+            date_ranges=date,
+        )
+        response = client.run_report(request)
+        for row in response.rows:
+            if row.dimension_values[0].value == "resource_download":
+                package = row.dimension_values[1].value
+                count = row.metric_values[0].value
+                if "/" in package:
+                    if not package.startswith(PACKAGE_URL):
+                        package = "/" + "/".join(package.split("/")[2:])
+                    
+                    val = 0
+                    if package in packages and date_name in packages[package]:
+                        val += packages[pkg_path][date_name]
                     packages.setdefault(package, {})[date_name] = (
                         int(count) + val
                     )

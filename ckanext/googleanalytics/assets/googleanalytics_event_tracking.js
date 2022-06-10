@@ -9,8 +9,14 @@ ckan.module("google-analytics", function(jQuery, _) {
       jQuery("a.resource-url-analytics").on("click", function() {
         var resource_url = encodeURIComponent(jQuery(this).prop("href"));
         if (resource_url) {
-          ga("send", "event", "Resource", "Download", resource_url);
+          if (window.measures) {
+            gtag('event', 'resource_download', {'resourceid': resource_url })
+          }
+          else {
+            ga("send", "event", "Resource", "Download", resource_url)
+          }
         }
+          
       });
     }
   };

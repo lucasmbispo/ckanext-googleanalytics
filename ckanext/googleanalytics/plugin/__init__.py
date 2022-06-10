@@ -14,6 +14,7 @@ import ckan.plugins as p
 import ckan.plugins.toolkit as tk
 from ckanext.googleanalytics.actions import resource_stat , package_stat
 from ckan.exceptions import CkanVersionException
+import json
 
 DEFAULT_RESOURCE_URL_TAG = "/downloads/"
 
@@ -40,19 +41,27 @@ class AnalyticsPostThread(threading.Thread):
 
     def run(self):
         while True:
-            # grabs host from queue
-            data_dict = self.queue.get()
-
-            data = urlencode(data_dict)
-            log.debug("Sending API event to Google Analytics: " + data)
-            # send analytics
-            res = requests.post(
-                "http://www.google-analytics.com/collect",
-                headers={'user-agent': 'CPython/2.7'},
-                data=data,
-                timeout=10,
-            )
-            # signals to queue job is done
+            data = self.queue.get()
+            if tk.config.get("googleanalytics.measurement_id"):
+                log.debug("Sending API event to Google Analytics: GA4")
+                measure_id = tk.config.get("googleanalytics.measurement_id")
+                api_secret = tk.config.get("googleanalytics.api_secret")
+                res = requests.post(
+                    f"https://www.google-analytics.com/mp/collect?measurement_id={measure_id}&api_secret={api_secret}",
+                    data=json.dumps(data),
+                    timeout=10,
+                )
+            else:
+                data = urlencode(data)
+                log.debug("Sending API event to Google Analytics: " + data)
+                # send analytics
+                res = requests.post(
+                    "http://www.google-analytics.com/collect",
+                    headers={'user-agent': 'CPython/2.7'},
+                    data=data,
+                    timeout=10,
+                )
+                # signals to queue job is done
             self.queue.task_done()
 
 
@@ -116,6 +125,10 @@ class GoogleAnalyticsPlugin(GAMixinPlugin, p.SingletonPlugin):
             config.get("googleanalytics.enable_user_id", False)
         )
 
+        self.googleanalytics_measurment_id = config.get(
+            "googleanalytics.measurement_id", ""
+        )
+
         # p.toolkit.add_resource("../assets", "ckanext-googleanalytics")
 
         # spawn a pool of 5 threads, and pass them queue instance
@@ -153,11 +166,14 @@ class GoogleAnalyticsPlugin(GAMixinPlugin, p.SingletonPlugin):
         if self.enable_user_id and tk.c.user:
             self.googleanalytics_fields["userId"] = str(tk.c.userobj.id)
 
+        ## annonymize IP
+        self.googleanalytics_fields["anonymize_ip"] = "true"
         data = {
             "googleanalytics_id": self.googleanalytics_id,
             "googleanalytics_domain": self.googleanalytics_domain,
             "googleanalytics_fields": str(self.googleanalytics_fields),
             "googleanalytics_linked_domains": self.googleanalytics_linked_domains,
+            "googleanalytics_measurement_id": self.googleanalytics_measurment_id
         }
         return p.toolkit.render_snippet(
             "googleanalytics/snippets/googleanalytics_header.html", data
