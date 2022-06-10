@@ -210,3 +210,76 @@ To initally create the analytics table
 ```
 ckan -c ckan.ini googleanalytics init
 ```
+
+
+
+## SETUP
+
+1) Create GA4 account: Login into GA -> click on Admin -> click on create account -> select GA4 option
+
+![](docimage/ga1.png)
+
+2) click on `Admin` again , then click on `Data Streams` to fetch the neccessary values
+
+![](docimage/ga7.png)
+
+In data streams click on the forward arrow `>` beneath `Add stream`
+![](docimage/ga8.png)
+
+click on the copy icon beside `MEASUREMENT ID`
+
+Add this value into `.env` e.g `CKAN___GOOGLEANALYTICS__MEASUREMENT_ID = G-XTFHJCLHDD`
+
+Still on that page scroll down and click on `Measurement Protocol API secrets`  -> then click on create to create a new `api secret`
+
+![](docimage/ga10.png)
+![](docimage/ga11.png)
+![](docimage/ga12.png)
+Then click on the copy Icon and paste the value in .env e.g `CKAN___GOOGLEANALYTICS__API_SECRET = BDU0P13TRG-VVwfF2DKTcQ`
+
+3) In the Admin page -> click on `Property Setting` and copy the `PROPERTY ID`
+![](docimage/ga9.png)
+
+4) Next step is to create custom event: Go to Tag Manager
+
+![](docimage/ga13.png)
+
+Click on `Tags` -> and then click new
+
+![](docimage/ga14.png)
+
+Click on the pen icon -> and then choose `Google Analytics: GA4 Event`
+![](docimage/ga16.png)
+
+For `configuration Tag`: select the hihlighted field in the image below
+
+![](docimage/ga17.png)
+
+Add the measurement id you copied, and name your event `resource_download`
+
+![](docimage/ga18.png)
+
+click on event parameters -> click Add row -> fill in the field has shown in the image
+![](docimage/ga19.png)
+
+Then click on the save button. Click on save without trigger in the pop up.
+
+Then even is created and ready to be used.
+
+
+## Enviroment
+
+At the end of the setup this are the neccessary env to be set
+e.g
+
+```
+CKAN___GOOGLEANALYTICS__ACCOUNT =
+CKAN___GOOGLEANALYTICS__PROPERTY_ID = 
+CKAN___GOOGLEANALYTICS__MEASUREMENT_ID = 
+CKAN___GOOGLEANALYTICS__API_SECRET = 
+CKAN___GOOGLEANALYTICS__RECENT_VIEW_DAYS = 14 // should be send corresponding to the cron job
+```
+
+
+
+
