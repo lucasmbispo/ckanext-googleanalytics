@@ -97,8 +97,20 @@ def _post_analytics(
 
     from ckanext.googleanalytics.plugin import GoogleAnalyticsPlugin
 
-    if tk.config.get("googleanalytics.id"):
-        data_dict = {
+    if tk.config.get("googleanalytics.measurement_id"):
+        data = {
+            "client_id": hashlib.md5(six.ensure_binary(tk.c.user)).hexdigest(),
+            "events": [
+                {
+                    "name": "resource_download",
+                    "params" : {
+                        "resourceid": tk.request.environ["PATH_INFO"]
+                    }
+                }
+            ]
+        }
+    else:
+        data = {
             "v": 1,
             "tid": tk.config.get("googleanalytics.id"),
             "cid": hashlib.md5(six.ensure_binary(tk.c.user)).hexdigest(),
@@ -111,4 +123,4 @@ def _post_analytics(
             "ea": request_obj_type + request_function,
             "el": request_id,
         }
-        GoogleAnalyticsPlugin.analytics_queue.put(data_dict)
+    GoogleAnalyticsPlugin.analytics_queue.put(data)

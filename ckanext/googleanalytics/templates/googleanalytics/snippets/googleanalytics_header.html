@@ -1,3 +1,18 @@
+{% if googleanalytics_measurement_id %}
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{googleanalytics_measurement_id}}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    var id = '{{googleanalytics_measurement_id}}'
+    gtag('config', id, {{googleanalytics_fields|safe}})
+
+    window.measures = true;
+  </script>
+
+{% else %}
 <script type="text/javascript">
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -11,4 +26,7 @@
   {% endif %}   
   ga('set', 'anonymizeIp', true);
   ga('send', 'pageview');
+  console.log("ANALYTICS")
 </script>
+
+{% endif %}
