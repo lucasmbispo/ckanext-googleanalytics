@@ -131,7 +131,7 @@ def _post_analytics(
                 {
                     "name": "resource_download",
                     "params" : {
-                        "resourceid": "/dataset/{}".format(package.get("name"))
+                        "resourceid": referer_link
                     }
                 }
             ]
