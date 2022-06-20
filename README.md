@@ -260,7 +260,34 @@ Add the measurement id you copied, and name your event `resource_download`
 ![](docimage/ga18.png)
 
 click on event parameters -> click Add row -> fill in the field has shown in the image
-![](docimage/ga19.png)
+![](docimage/ga20.png)
+
+once the parameter Name is entered. We need to add value. since our values will be URL- we won't set it to `Page Url` or `Page path` to prevent adding redundant url. Hence we create custom value.
+
+click on the plus button in `value` input field
+
+![](docimage/ga21.png)
+
+In the above image click on the `+` sign at the top right
+
+Take your mouse over `Variable configuration` and click on the `pen` icon
+![](docimage/ga22.png)
+
+Scroll donw and click on `constant`
+
+![](docimage/ga23.png)
+
+Give the constant value any name and click on save
+
+![](docimage/ga24.png)
+
+There will be a pop up on save. Tha name can be changed or left as it is. then click save.
+
+This will lead you to the event page. The`Value` should be the name saved for the constant from the previous page.
+![](docimage/ga25.png)
+
+Then click save at the upper right of the page.
+
 
 Then click on the save button. Click on save without trigger in the pop up.
 
