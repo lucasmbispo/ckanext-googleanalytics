@@ -103,9 +103,9 @@ def _post_analytics(
             "client_id": hashlib.md5(six.ensure_binary(tk.c.user)).hexdigest(),
             "events": [
                 {
-                    "name": "resource_download",
+                    "name": "file_download",
                     "params" : {
-                        "resourceid": tk.request.environ["PATH_INFO"]
+                        "link_url": tk.request.environ["PATH_INFO"]
                     }
                 }
             ]
@@ -129,9 +129,9 @@ def _post_analytics(
             "client_id": hashlib.md5(six.ensure_binary(tk.c.user)).hexdigest(),
             "events": [
                 {
-                    "name": "resource_download",
+                    "name": "file_download",
                     "params" : {
-                        "resourceid": referer_link
+                        "link_url": referer_link
                     }
                 }
             ]
