@@ -240,58 +240,6 @@ Then click on the copy Icon and paste the value in .env e.g `CKAN___GOOGLEANALYT
 3) In the Admin page -> click on `Property Setting` and copy the `PROPERTY ID`
 ![](docimage/ga9.png)
 
-4) Next step is to create custom event: Go to Tag Manager
-
-![](docimage/ga13.png)
-
-Click on `Tags` -> and then click new
-
-![](docimage/ga14.png)
-
-Click on the pen icon -> and then choose `Google Analytics: GA4 Event`
-![](docimage/ga16.png)
-
-For `configuration Tag`: select the hihlighted field in the image below
-
-![](docimage/ga17.png)
-
-Add the measurement id you copied, and name your event `resource_download`
-
-![](docimage/ga18.png)
-
-click on event parameters -> click Add row -> fill in the field has shown in the image
-![](docimage/ga20.png)
-
-once the parameter Name is entered. We need to add value. since our values will be URL- we won't set it to `Page Url` or `Page path` to prevent adding redundant url. Hence we create custom value.
-
-click on the plus button in `value` input field
-
-![](docimage/ga21.png)
-
-In the above image click on the `+` sign at the top right
-
-Take your mouse over `Variable configuration` and click on the `pen` icon
-![](docimage/ga22.png)
-
-Scroll donw and click on `constant`
-
-![](docimage/ga23.png)
-
-Give the constant value any name and click on save
-
-![](docimage/ga24.png)
-
-There will be a pop up on save. Tha name can be changed or left as it is. then click save.
-
-This will lead you to the event page. The`Value` should be the name saved for the constant from the previous page.
-![](docimage/ga25.png)
-
-Then click save at the upper right of the page.
-
-
-Then click on the save button. Click on save without trigger in the pop up.
-
-Then even is created and ready to be used.
 
 
 ## Enviroment
