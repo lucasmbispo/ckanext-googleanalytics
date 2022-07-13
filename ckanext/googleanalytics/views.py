@@ -69,13 +69,17 @@ def download(id, resource_id, filename=None, package_type="dataset"):
         log.debug("Use default CKAN callback for resource.download")
         handler_path = resource.download
 
-    _post_analytics(
-        g.user,
-        "CKAN Resource Download Request",
-        "Resource",
-        "Download",
-        resource_id,
-    )
+    try:
+        _post_analytics(
+            g.user,
+            "CKAN Resource Download Request",
+            "Resource",
+            "Download",
+            resource_id,
+        )
+    except Exception as e:
+        log.error(e)
+    
     return handler_path(
         id=id,
         resource_id=resource_id,
