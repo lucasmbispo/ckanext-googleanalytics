@@ -110,20 +110,16 @@ def _post_analytics(
                 }
             ]
         }
-        if tk.request.environ.get("HTTP_REFERER", ""):
-            referer = tk.request.environ.get("HTTP_REFERER", "")
-            referer = referer.split("/dataset/")[1].split("/")[0]
-            referer_link = "/dataset/{}".format(referer)
-        else:
-            path = tk.request.environ["PATH_INFO"]
-            path_id = path.split("/dataset/")[1].split("/")[0]
-            context = {
-                u'model': model,
-                u'session': model.Session,
-                u'user': g.user
-            }
-            package = tk.get_action("package_show")(context, {"id": path_id})
-            referer_link = "/dataset/{}".format(package.get("name"))
+        
+        path = tk.request.environ["PATH_INFO"]
+        path_id = path.split("/dataset/")[1].split("/")[0]
+        context = {
+            u'model': model,
+            u'session': model.Session,
+            u'user': g.user
+        }
+        package = tk.get_action("package_show")(context, {"id": path_id})
+        referer_link = "/dataset/{}".format(package.get("name"))
 
         resource_data = {
             "client_id": hashlib.md5(six.ensure_binary(tk.c.user)).hexdigest(),
