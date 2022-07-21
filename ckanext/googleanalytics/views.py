@@ -11,6 +11,7 @@ import ckan.logic as logic
 import ckan.plugins.toolkit as tk
 import ckan.views.api as api
 import ckan.views.resource as resource
+import ckan.model as model
 
 from ckan.common import g
 
@@ -68,13 +69,17 @@ def download(id, resource_id, filename=None, package_type="dataset"):
         log.debug("Use default CKAN callback for resource.download")
         handler_path = resource.download
 
-    _post_analytics(
-        g.user,
-        "CKAN Resource Download Request",
-        "Resource",
-        "Download",
-        resource_id,
-    )
+    try:
+        _post_analytics(
+            g.user,
+            "CKAN Resource Download Request",
+            "Resource",
+            "Download",
+            resource_id,
+        )
+    except Exception as e:
+        log.error(e)
+    
     return handler_path(
         id=id,
         resource_id=resource_id,
@@ -102,13 +107,38 @@ def _post_analytics(
             "client_id": hashlib.md5(six.ensure_binary(tk.c.user)).hexdigest(),
             "events": [
                 {
-                    "name": "resource_download",
+                    "name": "file_download",
                     "params" : {
-                        "resourceid": tk.request.environ["PATH_INFO"]
+                        "link_url": tk.request.environ["PATH_INFO"]
                     }
                 }
             ]
         }
+        
+        path = tk.request.environ["PATH_INFO"]
+        path_id = path.split("/dataset/")[1].split("/")[0]
+        context = {
+            u'model': model,
+            u'session': model.Session,
+            u'user': g.user
+        }
+        package = tk.get_action("package_show")(context, {"id": path_id})
+        referer_link = "/dataset/{}".format(package.get("name"))
+
+        resource_data = {
+            "client_id": hashlib.md5(six.ensure_binary(tk.c.user)).hexdigest(),
+            "events": [
+                {
+                    "name": "file_download",
+                    "params" : {
+                        "link_url": referer_link
+                    }
+                }
+            ]
+        }
+
+        GoogleAnalyticsPlugin.analytics_queue.put(resource_data)
+
     else:
         data = {
             "v": 1,

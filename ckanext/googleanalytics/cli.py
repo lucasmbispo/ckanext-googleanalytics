@@ -387,13 +387,13 @@ def get_ga4_data(client):
     for date_name, date in list(dates.items()):
         request = RunReportRequest(
             property=f"properties/{property_id}",
-            dimensions=[Dimension(name="eventName"), Dimension(name="pagePath") ],
+            dimensions=[Dimension(name="eventName"), Dimension(name="linkUrl") ],
             metrics=[Metric(name="eventCount")],
             date_ranges=date,
         )
         response = client.run_report(request)
         for row in response.rows:
-            if row.dimension_values[0].value == "resource_download":
+            if row.dimension_values[0].value == "file_download":
                 package = row.dimension_values[1].value
                 count = row.metric_values[0].value
                 if "/" in package:

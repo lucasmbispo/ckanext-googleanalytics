@@ -240,31 +240,6 @@ Then click on the copy Icon and paste the value in .env e.g `CKAN___GOOGLEANALYT
 3) In the Admin page -> click on `Property Setting` and copy the `PROPERTY ID`
 ![](docimage/ga9.png)
 
-4) Next step is to create custom event: Go to Tag Manager
-
-![](docimage/ga13.png)
-
-Click on `Tags` -> and then click new
-
-![](docimage/ga14.png)
-
-Click on the pen icon -> and then choose `Google Analytics: GA4 Event`
-![](docimage/ga16.png)
-
-For `configuration Tag`: select the hihlighted field in the image below
-
-![](docimage/ga17.png)
-
-Add the measurement id you copied, and name your event `resource_download`
-
-![](docimage/ga18.png)
-
-click on event parameters -> click Add row -> fill in the field has shown in the image
-![](docimage/ga19.png)
-
-Then click on the save button. Click on save without trigger in the pop up.
-
-Then even is created and ready to be used.
 
 
 ## Enviroment
