@@ -386,7 +386,7 @@ def get_ga4_data(client):
     
     for date_name, date in list(dates.items()):
         request = RunReportRequest(
-            property=f"properties/{property_id}",
+            property="properties/{}".format(property_id),
             dimensions=[Dimension(name="eventName"), Dimension(name="linkUrl") ],
             metrics=[Metric(name="eventCount")],
             date_ranges=date,
