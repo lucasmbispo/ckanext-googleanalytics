@@ -216,31 +216,22 @@ ckan -c ckan.ini googleanalytics init
 ## SETUP
 
 1) Create GA4 account: Login into GA -> click on Admin -> click on create account -> select GA4 option
-
-![](docimage/ga1.png)
-
-2) click on `Admin` again , then click on `Data Streams` to fetch the neccessary values
-
-![](docimage/ga7.png)
-
-In data streams click on the forward arrow `>` beneath `Add stream`
-![](docimage/ga8.png)
-
-click on the copy icon beside `MEASUREMENT ID`
-
-Add this value into `.env` e.g `CKAN___GOOGLEANALYTICS__MEASUREMENT_ID = G-XTFHJCLHDD`
-
-Still on that page scroll down and click on `Measurement Protocol API secrets`  -> then click on create to create a new `api secret`
-
-![](docimage/ga10.png)
-![](docimage/ga11.png)
-![](docimage/ga12.png)
-Then click on the copy Icon and paste the value in .env e.g `CKAN___GOOGLEANALYTICS__API_SECRET = BDU0P13TRG-VVwfF2DKTcQ`
-
+  ![](docimage/ga1.png)
+2) Click on `Admin` again , then click on `Data Streams` to fetch the neccessary values.  
+  If there are no current data streams, add a new datastream for your website
+  ![GA-1](https://user-images.githubusercontent.com/57398621/186406250-ae0bea91-f4c2-4cff-a8c5-8bcf06b59793.jpg)
+  ![](docimage/ga7.png)
+  In data streams click on the forward arrow `>` beneath `Add stream`
+  ![](docimage/ga8.png)
+  click on the copy icon beside `MEASUREMENT ID`
+  Add this value into `.env` e.g `CKAN___GOOGLEANALYTICS__MEASUREMENT_ID = G-XTFHJCLHDD`
+  Still on that page scroll down and click on `Measurement Protocol API secrets`  -> then click on create to create a new `api secret`
+  ![](docimage/ga10.png)
+  ![](docimage/ga11.png)
+  ![](docimage/ga12.png)
+  Then click on the copy Icon and paste the value in .env e.g `CKAN___GOOGLEANALYTICS__API_SECRET = BDU0P13TRG-VVwfF2DKTcQ`
 3) In the Admin page -> click on `Property Setting` and copy the `PROPERTY ID`
-![](docimage/ga9.png)
-
-
+  ![](docimage/ga9.png)
 
 ## Enviroment
 
