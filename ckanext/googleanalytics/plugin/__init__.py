@@ -83,10 +83,10 @@ class GoogleAnalyticsPlugin(GAMixinPlugin, p.SingletonPlugin):
         See IConfigurable.
 
         """
-        if "googleanalytics.id" not in config:
-            msg = "Missing googleanalytics.id in config"
+        if "googleanalytics.id" not in config and "googleanalytics.measurement_id" not in config:
+            msg = "Missing googleanalytics.id or googleanalytics.measurement_id in config. One must be set."
             raise GoogleAnalyticsException(msg)
-        self.googleanalytics_id = config["googleanalytics.id"]
+        self.googleanalytics_id = config.get('googleanalytics.id')
         self.googleanalytics_domain = config.get(
             "googleanalytics.domain", "auto"
         )
