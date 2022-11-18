@@ -81,6 +81,7 @@ def download(id, resource_id, filename=None, package_type="dataset"):
         log.error(e)
     
     return handler_path(
+        package_type= 'dataset',
         id=id,
         resource_id=resource_id,
         filename=filename,
