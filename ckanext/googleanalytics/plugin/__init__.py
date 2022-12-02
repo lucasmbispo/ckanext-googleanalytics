@@ -162,8 +162,12 @@ class GoogleAnalyticsPlugin(GAMixinPlugin, p.SingletonPlugin):
         templates in this extension, see ITemplateHelpers.
 
         """
+        try:
+            current_user = tk.c.user
+        except AttributeError:
+            current_user = False
 
-        if self.enable_user_id and tk.c.user:
+        if self.enable_user_id and current_user:
             self.googleanalytics_fields["userId"] = str(tk.c.userobj.id)
 
         ## annonymize IP
