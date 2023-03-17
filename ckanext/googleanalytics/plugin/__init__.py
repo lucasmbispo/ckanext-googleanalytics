@@ -41,8 +41,7 @@ class AnalyticsPostThread(threading.Thread):
 
     def run(self):
         while True:
-            data_dict = dict([(k, v.encode('utf-8') if isinstance(v, str) else v) for k, v in self.queue.get().items()])
-            data = urlencode(data_dict)
+            data = self.queue.get()
             if tk.config.get("googleanalytics.measurement_id"):
                 log.debug("Sending API event to Google Analytics: GA4")
                 measure_id = tk.config.get("googleanalytics.measurement_id")
@@ -56,6 +55,7 @@ class AnalyticsPostThread(threading.Thread):
             else:
                 log.debug("Sending API event to Google Analytics: " + data)
                 # send analytics
+                data = dict([(k, v.encode('utf-8') if isinstance(v, str) else v) for k, v in data.items()])
                 res = requests.post(
                     "http://www.google-analytics.com/collect",
                     headers={'user-agent': 'CPython/2.7'},
