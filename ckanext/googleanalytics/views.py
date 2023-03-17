@@ -80,6 +80,14 @@ def download(id, resource_id, filename=None, package_type="dataset"):
     except Exception as e:
         log.error(e)
     
+    if "package_type" in list(handler_path.__code__.co_varnames):
+        return handler_path(
+            package_type ="dataset",
+            id=id,
+            resource_id=resource_id,
+            filename=filename,
+        )
+
     return handler_path(
         id=id,
         resource_id=resource_id,
