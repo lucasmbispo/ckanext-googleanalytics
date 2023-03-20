@@ -62,10 +62,13 @@ ga.add_url_rule(
 
 
 def download(id, resource_id, filename=None, package_type="dataset"):
-    try:
+    if "cloud_storage" in tk.config.get("ckan.plugins", ""):
         from ckanext.cloudstorage.views.resource_download import resource_download
         handler_path = resource_download
-    except ImportError:
+    elif "s3filestore" in tk.config.get("ckan.plugins", ""):
+        from ckanext.s3filestore.views.resource import resource_download
+        handler_path = resource_download
+    else:
         log.debug("Use default CKAN callback for resource.download")
         handler_path = resource.download
 
