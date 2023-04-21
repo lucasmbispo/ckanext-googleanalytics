@@ -47,7 +47,9 @@ class AnalyticsPostThread(threading.Thread):
                 measure_id = tk.config.get("googleanalytics.measurement_id")
                 api_secret = tk.config.get("googleanalytics.api_secret")
                 res = requests.post(
-                    f"https://www.google-analytics.com/mp/collect?measurement_id={measure_id}&api_secret={api_secret}",
+                    #f"https://www.google-analytics.com/mp/collect?measurement_id={measure_id}&api_secret={api_secret}",
+                    "https://www.google-analytics.com/mp/collect?measurement_id=%s&api_secret=%s" % (measure_id, api_secret),
+
                     data=json.dumps(data),
                     timeout=10,
                 )
