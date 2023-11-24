@@ -381,7 +381,7 @@ def get_ga4_data(client):
     property_id = tk.config.get("googleanalytics.property_id")
     dates = {
         "recent": [DateRange(start_date="{}daysAgo".format(_recent_view_days()), end_date="today")],
-        "ever": [DateRange(start_date="2005-01-01", end_date="today")]
+        "ever": [DateRange(start_date="2015-08-14", end_date="today")]
     }
     
     for date_name, date in list(dates.items()):
