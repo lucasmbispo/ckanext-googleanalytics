@@ -288,7 +288,7 @@ def save_ga_data(packages_data):
             if "/" in package_name:
                 log.warning("%s not a valid package name" % package_name)
                 continue
-            item = model.Package.by_name(package_name)
+            item = model.Package.get(package_name)
             if not item:
                 log.warning("Couldn't find package %s" % package_name)
                 continue
@@ -402,7 +402,7 @@ def get_ga4_data(client):
                     
                     val = 0
                     if package in packages and date_name in packages[package]:
-                        val += packages[pkg_path][date_name]
+                        val += packages[package][date_name]
                     packages.setdefault(package, {})[date_name] = (
                         int(count) + val
                     )

@@ -125,6 +125,9 @@ def _post_analytics(
         package = tk.get_action("package_show")(context, {"id": path_id})
         referer_link = "/dataset/{}".format(package.get("name"))
 
+        if len(referer_link) > 100:
+            referer_link = "/dataset/{}".format(package.get("id"))
+
         resource_data = {
             "client_id": hashlib.md5(six.ensure_binary(tk.c.user)).hexdigest(),
             "events": [
