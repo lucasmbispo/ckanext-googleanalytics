@@ -102,7 +102,7 @@ def get_top_packages(limit=20):
             package_stats.c.visits_recently,
             package_stats.c.visits_ever,
         ]
-    ).order_by(package_stats.c.visits_recently.desc())
+    ).order_by(package_stats.c.visits_ever.desc())
     res = connection.execute(s).fetchmany(limit)
     for package_id, recent, ever in res:
         item = q.filter(text("package.id = '%s'" % package_id))

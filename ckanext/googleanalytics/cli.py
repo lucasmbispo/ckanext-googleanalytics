@@ -77,7 +77,6 @@ def load(credentials, start_date):
             save_ga_data(packages_data)
             log.info("Saved %s records from google" % len(packages_data))
 
-
 def _resource_url_tag():
     return tk.config.get(
         "googleanalytics_resource_prefix", DEFAULT_RESOURCE_URL_TAG
@@ -284,11 +283,16 @@ def save_ga_data(packages_data):
             dbutil.update_resource_visits(resource.id, recently, ever)
             log.info("Updated %s with %s visits" % (resource.id, visits))
         else:
-            package_name = identifier[len(PACKAGE_URL) :]
+            f = identifier.split("/dataset/")
+            if len(f)>1 :
+                g = f[1].split("/")[0]
+                package_name = g
+            else:
+               package_name = identifier[len(PACKAGE_URL) :]
             if "/" in package_name:
                 log.warning("%s not a valid package name" % package_name)
                 continue
-            item = model.Package.by_name(package_name)
+            item = model.Package.get(package_name)
             if not item:
                 log.warning("Couldn't find package %s" % package_name)
                 continue
@@ -381,7 +385,7 @@ def get_ga4_data(client):
     property_id = tk.config.get("googleanalytics.property_id")
     dates = {
         "recent": [DateRange(start_date="{}daysAgo".format(_recent_view_days()), end_date="today")],
-        "ever": [DateRange(start_date="2005-01-01", end_date="today")]
+        "ever": [DateRange(start_date="2020-01-01", end_date="today")]
     }
     
     for date_name, date in list(dates.items()):
