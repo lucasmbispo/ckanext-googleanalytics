@@ -7,12 +7,10 @@ import re
 import logging
 import click
 import ckan.model as model
-from google.analytics.data_v1beta import BetaAnalyticsDataClient
-from google.analytics.data_v1beta.types import DateRange
-from google.analytics.data_v1beta.types import Dimension
-from google.analytics.data_v1beta.types import Metric
-from google.analytics.data_v1beta.types import RunReportRequest
 from . import dbutil
+from oauth2client.service_account import ServiceAccountCredentials
+from googleapiclient.discovery import build
+import httplib2
 
 import ckan.plugins.toolkit as tk
 
@@ -54,7 +52,7 @@ def load(credentials, start_date):
 
     try:
         if tk.config.get("googleanalytics.measurement_id"):
-            service = BetaAnalyticsDataClient.from_service_account_file(credentials)
+            service = init_ga4_service(credentials)
         else:
             service = init_service(credentials)
             profile_id = get_profile_id(service)     
@@ -65,7 +63,7 @@ def load(credentials, start_date):
         bulk_import(service, profile_id, start_date)
     else:
         if tk.config.get("googleanalytics.measurement_id"):
-            packages_data = get_ga4_data(service)
+            packages_data = get_ga4_data2(service)
             save_ga_data(packages_data)
             log.info("Saved %s records from google" % len(packages_data))
         else:
@@ -380,34 +378,68 @@ def get_ga_data(service, profile_id, query_filter):
     return packages
 
 
-def get_ga4_data(client):
+
+def init_ga4_service(credentials_path):
+    scopes = ["https://www.googleapis.com/auth/analytics.readonly"]
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials_path, scopes)
+    http = httplib2.Http()
+    http = credentials.authorize(http)
+   
+    service = build('analyticsdata', 'v1beta', http=http, cache_discovery=False)
+    return service
+
+
+def get_ga4_data2(service):
     packages = {}
     property_id = tk.config.get("googleanalytics.property_id")
     dates = {
-        "recent": [DateRange(start_date="{}daysAgo".format(_recent_view_days()), end_date="today")],
-        "ever": [DateRange(start_date="2020-01-01", end_date="today")]
+        "recent": {"startDate": "{}daysAgo".format(_recent_view_days()), "endDate": "today"},
+        "ever": {"startDate": "2020-01-01", "endDate": "today"}
     }
-    
-    for date_name, date in list(dates.items()):
-        request = RunReportRequest(
-            property=f"properties/{property_id}",
-            dimensions=[Dimension(name="eventName"), Dimension(name="linkUrl") ],
-            metrics=[Metric(name="eventCount")],
-            date_ranges=date,
-        )
-        response = client.run_report(request)
-        for row in response.rows:
-            if row.dimension_values[0].value == "file_download":
-                package = row.dimension_values[1].value
-                count = row.metric_values[0].value
-                if "/" in package:
-                    if not package.startswith(PACKAGE_URL):
-                        package = "/" + "/".join(package.split("/")[2:])
-                    
-                    val = 0
-                    if package in packages and date_name in packages[package]:
-                        val += packages[pkg_path][date_name]
-                    packages.setdefault(package, {})[date_name] = (
-                        int(count) + val
-                    )
+
+    for date_name, date in dates.items():
+        request_body = {
+            "requests": [{
+                "dateRanges": [date],
+                "metrics": [{"name": "eventCount"}],
+                "dimensions": [{"name": "eventName"}, {"name": "linkUrl"}]
+            }]
+        }
+        dimensions = ['sessionSourceMedium']
+        metrics = ['sessions', 'screenPageViews']
+        request = {
+            "requests": [
+                {
+                "dateRanges": [
+                    {
+                    "startDate": "2022-03-01",
+                    "endDate": "2022-03-31"
+                    }
+                ],
+                "dimensions": [{'name': name} for name in dimensions],
+                "metrics": [{'name': name} for name in metrics],
+                "limit": 100000
+                }
+            ]
+        }
+        
+        response = service.properties().batchRunReports(body=request_body, property=f'properties/{property_id}').execute()
+        
+        for report in response.get('reports', []):
+            for row in report.get('rows', []):
+                event_category = row['dimensionValues'][0].get('value', '')
+                event_label = row['dimensionValues'][1].get('value', '')
+                event_count = row['metricValues'][0].get('value', 0)
+
+                if event_category == "file_download":
+                    package = event_label
+                    count = event_count
+                    if "/" in package:
+                        if not package.startswith(PACKAGE_URL):
+                            package = "/" + "/".join(package.split("/")[2:])
+                        
+                        val = 0
+                        if package in packages and date_name in packages[package]:
+                            val += packages[package][date_name]
+                        packages.setdefault(package, {})[date_name] = int(count) + val
     return packages
