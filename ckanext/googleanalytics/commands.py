@@ -396,7 +396,7 @@ class LoadAnalytics(CkanCommand):
                         )
         return packages
     
-    def init_ga4_service(credentials_path):
+    def init_ga4_service(self,credentials_path):
         scopes = ["https://www.googleapis.com/auth/analytics.readonly"]
         credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials_path, scopes)
         http = httplib2.Http()
