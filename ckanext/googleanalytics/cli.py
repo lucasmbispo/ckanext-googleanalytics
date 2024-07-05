@@ -405,23 +405,7 @@ def get_ga4_data2(service):
                 "dimensions": [{"name": "eventName"}, {"name": "linkUrl"}]
             }]
         }
-        dimensions = ['sessionSourceMedium']
-        metrics = ['sessions', 'screenPageViews']
-        request = {
-            "requests": [
-                {
-                "dateRanges": [
-                    {
-                    "startDate": "2022-03-01",
-                    "endDate": "2022-03-31"
-                    }
-                ],
-                "dimensions": [{'name': name} for name in dimensions],
-                "metrics": [{'name': name} for name in metrics],
-                "limit": 100000
-                }
-            ]
-        }
+       
         
         response = service.properties().batchRunReports(body=request_body, property='properties/{}'.format(property_id)).execute()
         

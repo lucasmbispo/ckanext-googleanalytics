@@ -10,6 +10,9 @@ from pylons import config as pylonsconfig
 from ckan.lib.cli import CkanCommand
 import ckan.model as model
 from ckan.plugins.toolkit import asint
+from oauth2client.service_account import ServiceAccountCredentials
+from googleapiclient.discovery import build
+import httplib2
 
 from . import dbutil
 
@@ -69,6 +72,9 @@ class LoadAnalytics(CkanCommand):
                 "googleanalytics.recent_view_days", DEFAULT_RECENT_VIEW_DAYS
             )
         )
+
+        self.property_id = self.CONFIG.get("googleanalytics.property_id", None)
+        self.measurement_id = self.CONFIG.get("googleanalytics.measurement_id", None)
 
         # funny dance we need to do to make sure we've got a
         # configured session
@@ -249,7 +255,10 @@ class LoadAnalytics(CkanCommand):
             raise Exception("Cannot find the token file %s" % self.args[0])
 
         try:
-            self.service = init_service(self.args[0])
+            if self.measurement_id:
+                self.service = self.init_ga4_service(self.args[0])
+            else:
+                self.service = init_service(self.args[0])
         except TypeError as e:
             raise Exception("Unable to create a service: {0}".format(e))
         self.profile_id = get_profile_id(self.service)
@@ -259,13 +268,18 @@ class LoadAnalytics(CkanCommand):
                 raise Exception("Illegal argument %s" % self.args[1])
             self.bulk_import()
         else:
-            query = "ga:pagePath=~%s,ga:pagePath=~%s" % (
-                PACKAGE_URL,
-                self.resource_url_tag,
-            )
-            packages_data = self.get_ga_data(query_filter=query)
-            self.save_ga_data(packages_data)
-            log.info("Saved %s records from google" % len(packages_data))
+            if self.measurement_id:
+                packages_data = self.get_ga4_data2(self.service)
+                self.save_ga_data(packages_data)
+                log.info("Saved %s records from google" % len(packages_data))
+            else:
+                query = "ga:pagePath=~%s,ga:pagePath=~%s" % (
+                    PACKAGE_URL,
+                    self.resource_url_tag,
+                )
+                packages_data = self.get_ga_data(query_filter=query)
+                self.save_ga_data(packages_data)
+                log.info("Saved %s records from google" % len(packages_data))
 
     def save_ga_data(self, packages_data):
         """Save tuples of packages_data to the database"""
@@ -380,4 +394,50 @@ class LoadAnalytics(CkanCommand):
                         packages.setdefault(package, {})[date_name] = (
                             int(count) + val
                         )
+        return packages
+    
+    def init_ga4_service(credentials_path):
+        scopes = ["https://www.googleapis.com/auth/analytics.readonly"]
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials_path, scopes)
+        http = httplib2.Http()
+        http = credentials.authorize(http)
+    
+        service = build('analyticsdata', 'v1beta', http=http, cache_discovery=False)
+        return service
+    
+    def get_ga4_data2(self,service):
+        packages = {}
+        dates = {
+            "recent": {"startDate": "{}daysAgo".format(self.recent_view_days), "endDate": "today"},
+            "ever": {"startDate": "2020-01-01", "endDate": "today"}
+        }
+
+        for date_name, date in dates.items():
+            request_body = {
+                "requests": [{
+                    "dateRanges": [date],
+                    "metrics": [{"name": "eventCount"}],
+                    "dimensions": [{"name": "eventName"}, {"name": "linkUrl"}]
+                }]
+            }
+            
+            response = service.properties().batchRunReports(body=request_body, property='properties/{}'.format(self.property_id)).execute()
+            
+            for report in response.get('reports', []):
+                for row in report.get('rows', []):
+                    event_category = row['dimensionValues'][0].get('value', '')
+                    event_label = row['dimensionValues'][1].get('value', '')
+                    event_count = row['metricValues'][0].get('value', 0)
+
+                    if event_category == "file_download":
+                        package = event_label
+                        count = event_count
+                        if "/" in package:
+                            if not package.startswith(PACKAGE_URL):
+                                package = "/" + "/".join(package.split("/")[2:])
+                            
+                            val = 0
+                            if package in packages and date_name in packages[package]:
+                                val += packages[package][date_name]
+                            packages.setdefault(package, {})[date_name] = int(count) + val
         return packages
