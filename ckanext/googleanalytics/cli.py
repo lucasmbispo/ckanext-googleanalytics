@@ -423,7 +423,7 @@ def get_ga4_data2(service):
             ]
         }
         
-        response = service.properties().batchRunReports(body=request_body, property=f'properties/{property_id}').execute()
+        response = service.properties().batchRunReports(body=request_body, property='properties/{}'.format(property_id)).execute()
         
         for report in response.get('reports', []):
             for row in report.get('rows', []):
