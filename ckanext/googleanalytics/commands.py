@@ -261,7 +261,7 @@ class LoadAnalytics(CkanCommand):
                 self.service = init_service(self.args[0])
         except TypeError as e:
             raise Exception("Unable to create a service: {0}".format(e))
-        self.profile_id = get_profile_id(self.service)
+        
 
         if len(self.args) > 1:
             if len(self.args) > 2 and self.args[1].lower() != "internal":
@@ -273,6 +273,7 @@ class LoadAnalytics(CkanCommand):
                 self.save_ga_data(packages_data)
                 log.info("Saved %s records from google" % len(packages_data))
             else:
+                self.profile_id = get_profile_id(self.service)
                 query = "ga:pagePath=~%s,ga:pagePath=~%s" % (
                     PACKAGE_URL,
                     self.resource_url_tag,
