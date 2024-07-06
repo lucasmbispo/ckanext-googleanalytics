@@ -78,9 +78,8 @@ class LoadAnalytics(CkanCommand):
 
         # funny dance we need to do to make sure we've got a
         # configured session
-        # model.Session.remove()
-        # model.Session.configure(bind=model.meta.engine)
-        log.info("Loading data from Google Analytics")
+        model.Session.remove()
+        model.Session.configure(bind=model.meta.engine)
         self.parse_and_save()
 
     def internal_save(self, packages_data, summary_date):
@@ -271,7 +270,7 @@ class LoadAnalytics(CkanCommand):
         else:
             if self.measurement_id:
                 packages_data = self.get_ga4_data2(self.service)
-                log.info("Saved %s records from google" % len(packages_data))
+                log.info("fetched %s records from google" % len(packages_data))
                 self.save_ga_data(packages_data)
                 log.info("Saved %s records from google" % len(packages_data))
             else:
