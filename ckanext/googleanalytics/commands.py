@@ -78,8 +78,8 @@ class LoadAnalytics(CkanCommand):
 
         # funny dance we need to do to make sure we've got a
         # configured session
-        model.Session.remove()
-        model.Session.configure(bind=model.meta.engine)
+        # model.Session.remove()
+        # model.Session.configure(bind=model.meta.engine)
         log.info("Loading data from Google Analytics")
         self.parse_and_save()
 
