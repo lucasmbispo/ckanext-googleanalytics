@@ -63,7 +63,7 @@ ga.add_url_rule(
 
 def download(id, resource_id, filename=None, package_type="dataset"):
     try:
-        from ckanext.cloudstorage.views.resource_download import resource_download
+        from ckanext.s3filestore.views.resource import resource_download
         handler_path = resource_download
     except ImportError:
         log.debug("Use default CKAN callback for resource.download")
