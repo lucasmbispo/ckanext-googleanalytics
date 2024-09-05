@@ -18,10 +18,10 @@ def resource_stat(context, data_dict):
 def package_stat(context, data_dict):
     '''
     Fetch package stats
-    '''
     package_id = data_dict['package_id']
     try:
         result = dbutil.get_package_stat(package_id)[0]
     except Exception as e:
         log.error(f"Package not in package_stat: {e}")
     return json.dumps(result)
+    '''
