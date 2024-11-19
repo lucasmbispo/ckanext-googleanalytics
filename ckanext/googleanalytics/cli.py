@@ -13,7 +13,6 @@ from google.analytics.data_v1beta.types import Dimension
 from google.analytics.data_v1beta.types import Metric
 from google.analytics.data_v1beta.types import RunReportRequest
 from . import dbutil
-
 import ckan.plugins.toolkit as tk
 
 log = logging.getLogger(__name__)
@@ -65,9 +64,10 @@ def load(credentials, start_date):
         bulk_import(service, profile_id, start_date)
     else:
         if tk.config.get("googleanalytics.measurement_id"):
-            packages_data = get_ga4_data(service)
-            save_ga_data(packages_data)
-            log.info("Saved %s records from google" % len(packages_data))
+            # packages_data = get_ga4_data(service)
+            # save_ga_data(packages_data)
+            frontend_data = get_ga4_frontend_data(service)
+            save_ga_frontend_data(frontend_data)
         else:
             query = "ga:pagePath=~%s,ga:pagePath=~%s" % (
                 PACKAGE_URL,
@@ -295,7 +295,38 @@ def save_ga_data(packages_data):
             dbutil.update_package_visits(item.id, recently, ever)
             log.info("Updated %s with %s visits" % (item.id, visits))
     model.Session.commit()
-
+    
+def get_package(package_id):
+    try:
+        package_show = tk.get_action('package_show')
+        return package_show({'ignore_auth': True}, {'id': package_id})
+    except Exception as e:
+        log.warning(e)
+        
+def save_ga_frontend_data(packages_data):
+    stats = []
+    for item in packages_data:
+        resource_id = item.get('resource_id')
+        dataset_id = item.get('dataset_id')
+        language = item.get('language')[:2]
+        count = item.get('count', 0)
+        dataset_title = ''
+        date_created  = item.get('date_created')    
+        if dataset_id:
+            package = get_package(dataset_id)
+            if package and isinstance(package, dict):
+                dataset_title = package.get('title', '')
+                
+        values = {
+            "resource_id": resource_id,
+            "dataset_id": dataset_id,
+            "language": language,
+            "count": count,
+            "dataset_title": dataset_title,
+            "date_created": date_created
+        }
+        stats.append(values)
+    dbutil.update_frontend_stats(stats)
 
 def ga_query(
     service,
@@ -405,5 +436,53 @@ def get_ga4_data(client):
                         val += packages[package][date_name]
                     packages.setdefault(package, {})[date_name] = (
                         int(count) + val
-                    )
+                    )               
+    return packages
+
+def get_ga4_frontend_data(client):
+    packages = {}
+    temp_data = {}
+    property_id = tk.config.get("googleanalytics.property_id")
+    dates = {
+        "recent": [DateRange(start_date="{}daysAgo".format(_recent_view_days()), end_date="today")],
+        "ever": [DateRange(start_date="2015-08-14", end_date="today")]
+    }
+    
+    for date_name, date in dates.items():
+        request = RunReportRequest(
+            property=f"properties/{property_id}",
+            dimensions=[
+                Dimension(name="eventName"),
+                Dimension(name="linkUrl"),
+                Dimension(name="customEvent:event_label"),
+                Dimension(name="dateHourMinute")
+            ],
+            metrics=[Metric(name="eventCount")],
+            date_ranges=date,
+        )
+        
+        response = client.run_report(request)
+        for row in response.rows:
+            if "file_download" in row.dimension_values[0].value:
+                event_name = row
+                # log.info('Event names: %s', event_name)
+                if row.dimension_values[0].value == "file_download_frontend":
+                    event_label = row.dimension_values[2].value
+                    raw_date = row.dimension_values[3].value
+                    formatted_date = datetime.datetime.strptime(raw_date, "%Y%m%d%H%M")
+                    date_created = formatted_date.strftime("%Y-%m-%d %H:%M:%S")
+                    resource = event_label.split(' | ')
+                    if len(resource) >= 3:
+                        resource_id = resource[0]
+                        dataset_id = resource[1]
+                        language = resource[2]
+                    else:
+                        log.warning("Unexpected format for event_label: %s" % event_label)
+                        continue
+                    count = int(row.metric_values[0].value)
+                    key = (resource_id, dataset_id, language)
+                    if key not in temp_data:
+                        temp_data[key] = {"resource_id": resource_id, "dataset_id": dataset_id, "language": language, "count": count, "date_created": date_created}
+                    packages = list(temp_data.values())
+                    log.info('Packages %s' % packages)
     return packages

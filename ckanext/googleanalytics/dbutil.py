@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, Integer, String, MetaData
+from sqlalchemy import Table, Column, Integer, String, MetaData, Float, DateTime
 from sqlalchemy.sql import select, text
 from sqlalchemy import func
 import logging
@@ -26,6 +26,17 @@ def init_tables():
         Column("resource_id", String(60), primary_key=True),
         Column("visits_recently", Integer),
         Column("visits_ever", Integer),
+    )
+    frontend_stats = Table(
+        "frontend_stats",
+        metadata,
+        Column("id", Integer, primary_key=True, autoincrement=True),
+        Column("resource_id", String(60), primary_key=True),
+        Column("dataset_id", String(60), nullable=False),      
+        Column("count", Integer),              
+        Column("language", String(2), nullable=False),   #AR or EN
+        Column("dataset_title", String(60)),
+        Column("date_created", DateTime)
     )
     metadata.create_all(model.meta.engine)
 
@@ -60,7 +71,20 @@ def _update_visits(table_name, item_id, recently, ever):
         }
         connection.execute(stats.insert().values(**values))
 
-
+def update_frontend_stats(stats):
+    table = get_table('frontend_stats')
+    session = model.Session()
+    try:
+        for stat in stats:
+            session.execute(table.insert().values(**stat))  
+        session.commit()  
+        log.info("Data inserted, transaction committed.")
+    except Exception as e:
+        log.error("Error during insertion: %s", str(e))
+        session.rollback() 
+    finally:
+        session.close()  
+    
 def update_resource_visits(resource_id, recently, ever):
     return _update_visits("resource_stats", resource_id, recently, ever)
 
@@ -145,10 +169,10 @@ def get_resource_stat(resource_id):
 
 def get_package_stat(package_id):
     connection = model.Session.connection()
-    package_stats = get_table("package_stats")
+    package_stats = get_table("frontend_stats")
     s = select(
-        [package_stats.c.visits_ever]
-    ).where(package_stats.c.package_id == package_id)
+        [package_stats.c.count]
+    ).where(package_stats.c.dataset_id == package_id)
     res = connection.execute(s).fetchone()
     return res
     
