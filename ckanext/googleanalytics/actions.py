@@ -20,9 +20,10 @@ def package_stat(context, data_dict):
     Fetch package stats
     '''
     package_id = data_dict['package_id']
+    result = ''
     try:
-        result = dbutil.get_package_stat(package_id)[0]
+        result = dbutil.get_package_stat(package_id)
     except Exception as e:
-        log.error(f"Package not in package_stat: {e}")
+        log.error(f"Package not in package_stat: {e} {package_id}")
     return json.dumps(result)
 

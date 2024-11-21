@@ -171,8 +171,9 @@ def get_package_stat(package_id):
     connection = model.Session.connection()
     package_stats = get_table("frontend_stats")
     s = select(
-        [package_stats.c.count]
+        [func.sum(package_stats.c.count)]
     ).where(package_stats.c.dataset_id == package_id)
-    res = connection.execute(s).fetchone()
-    return res
+
+    res = connection.execute(s).scalar()
+    return res or 0
     
