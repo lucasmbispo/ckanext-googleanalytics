@@ -1,6 +1,6 @@
 from datetime import timedelta
 import datetime
-from sqlalchemy import Table, Column, Integer, String, MetaData, Float, DateTime, Date
+from sqlalchemy import Table, Column, Integer, String, MetaData, Float, DateTime, Date, Text
 from sqlalchemy.sql import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import func
@@ -37,7 +37,7 @@ def init_tables():
         Column("dataset_id", String(60), nullable=False),      
         Column("count", Integer),              
         Column("language", String(2), nullable=False),   #AR or EN
-        Column("dataset_title", String(60)),
+        Column("dataset_title", Text),
         Column("date_created", Date, primary_key=True)
     )
     metadata.create_all(model.meta.engine)
