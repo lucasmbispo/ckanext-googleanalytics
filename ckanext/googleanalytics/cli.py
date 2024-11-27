@@ -315,7 +315,7 @@ def save_ga_frontend_data(packages_data):
         if dataset_id:
             package = get_package(dataset_id)
             if package and isinstance(package, dict):
-                dataset_title = package.get('title')
+                dataset_title = package.get('title','')
         if dataset_title:
             values = {
                 "resource_id": resource_id,
