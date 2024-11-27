@@ -310,12 +310,12 @@ def save_ga_frontend_data(packages_data):
         dataset_id = item.get('dataset_id')
         language = item.get('language')[:2]
         count = item.get('count', 0)
-        dataset_title = ''
+        dataset_title = None
         date_created  = item.get('date_created')    
         if dataset_id:
             package = get_package(dataset_id)
             if package and isinstance(package, dict):
-                dataset_title = package.get('title', '')
+                dataset_title = package.get('title')
         if dataset_title:
             values = {
                 "resource_id": resource_id,
