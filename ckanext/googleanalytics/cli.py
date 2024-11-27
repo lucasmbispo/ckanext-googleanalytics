@@ -316,16 +316,16 @@ def save_ga_frontend_data(packages_data):
             package = get_package(dataset_id)
             if package and isinstance(package, dict):
                 dataset_title = package.get('title', '')
-                
-        values = {
-            "resource_id": resource_id,
-            "dataset_id": dataset_id,
-            "language": language,
-            "count": count,
-            "dataset_title": dataset_title,
-            "date_created": date_created
-        }
-        stats.append(values)
+        if dataset_title:
+            values = {
+                "resource_id": resource_id,
+                "dataset_id": dataset_id,
+                "language": language,
+                "count": count,
+                "dataset_title": dataset_title,
+                "date_created": date_created
+            }
+            stats.append(values)
     dbutil.update_frontend_stats(stats)
 
 def ga_query(
