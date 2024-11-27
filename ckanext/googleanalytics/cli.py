@@ -394,16 +394,6 @@ def get_ga_data(service, profile_id, query_filter):
                     package = result[0]
                     if not package.startswith(PACKAGE_URL):
                         package = "/" + "/".join(package.split("/")[2:])
-
-                    count = result[1]
-                    # Make sure we add the different representations of the same
-                    # dataset /mysite.com & /www.mysite.com ...
-                    val = 0
-                    if package in packages and date_name in packages[package]:
-                        val += packages[package][date_name]
-                    packages.setdefault(package, {})[date_name] = (
-                        int(count) + val
-                    )
     return packages
 
 
@@ -444,7 +434,6 @@ def get_ga4_frontend_data(client):
     temp_data = {}
     property_id = tk.config.get("googleanalytics.property_id")
     dates = {
-        "recent": [DateRange(start_date="{}daysAgo".format(_recent_view_days()), end_date="today")],
         "ever": [DateRange(start_date="2015-08-14", end_date="today")]
     }
     
@@ -455,7 +444,7 @@ def get_ga4_frontend_data(client):
                 Dimension(name="eventName"),
                 Dimension(name="linkUrl"),
                 Dimension(name="customEvent:event_label"),
-                Dimension(name="dateHourMinute")
+                Dimension(name="date")
             ],
             metrics=[Metric(name="eventCount")],
             date_ranges=date,
@@ -465,13 +454,14 @@ def get_ga4_frontend_data(client):
         for row in response.rows:
             if "file_download" in row.dimension_values[0].value:
                 event_name = row
-                # log.info('Event names: %s', event_name)
+                log.info('Event names: %s', event_name)
                 if row.dimension_values[0].value == "file_download_frontend":
                     event_label = row.dimension_values[2].value
                     raw_date = row.dimension_values[3].value
-                    formatted_date = datetime.datetime.strptime(raw_date, "%Y%m%d%H%M")
-                    date_created = formatted_date.strftime("%Y-%m-%d %H:%M:%S")
+                    formatted_date = datetime.datetime.strptime(raw_date, "%Y%m%d")
+                    date_created = formatted_date.strftime("%Y-%m-%d")
                     resource = event_label.split(' | ')
+                    log.info('Resource: %s', resource)
                     if len(resource) >= 3:
                         resource_id = resource[0]
                         dataset_id = resource[1]

@@ -1,5 +1,8 @@
-from sqlalchemy import Table, Column, Integer, String, MetaData, Float, DateTime
+from datetime import timedelta
+import datetime
+from sqlalchemy import Table, Column, Integer, String, MetaData, Float, DateTime, Date
 from sqlalchemy.sql import select, text
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import func
 import logging
 import ckan.model as model
@@ -30,13 +33,12 @@ def init_tables():
     frontend_stats = Table(
         "frontend_stats",
         metadata,
-        Column("id", Integer, primary_key=True, autoincrement=True),
         Column("resource_id", String(60), primary_key=True),
         Column("dataset_id", String(60), nullable=False),      
         Column("count", Integer),              
         Column("language", String(2), nullable=False),   #AR or EN
         Column("dataset_title", String(60)),
-        Column("date_created", DateTime)
+        Column("date_created", Date, primary_key=True)
     )
     metadata.create_all(model.meta.engine)
 
@@ -76,7 +78,15 @@ def update_frontend_stats(stats):
     session = model.Session()
     try:
         for stat in stats:
-            session.execute(table.insert().values(**stat))  
+            insert_stmt = insert(table).values(**stat)
+            one_week = timedelta(days=7)
+            one_week_ago = datetime.datetime.now() - one_week
+            on_conflict = insert_stmt.on_conflict_do_update(
+                index_elements=['resource_id', 'date_created'],
+                set_=dict(count = insert_stmt.excluded.count),
+                where=(table.columns.date_created > one_week_ago)
+            )
+            session.execute(on_conflict)  
         session.commit()  
         log.info("Data inserted, transaction committed.")
     except Exception as e:
